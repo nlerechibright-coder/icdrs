@@ -142,7 +142,7 @@
                 <button id="btn-reset" class="bg-slate-600 text-white py-2 rounded font-semibold hover:bg-slate-500">Reset</button>
             </div>
         </div>
-        <div class="lg:col-span-2 bg-slate-900/80 rounded-lg p-3 border border-slate-700 h-48 overflow-y-auto font-mono text-xs" id="event-feed">
+        <div class="lg:col-span-2 bg-slate-900/80 rounded-lg p-3 border border-slate-700 font-mono text-xs" id="event-feed" style="height: 200px; overflow-y: auto; scroll-behavior: smooth;">
             <p class="text-slate-500 text-center mt-16">Waiting for scan to start...</p>
         </div>
     </div>
@@ -249,6 +249,7 @@ function sendControl(action) {
     .then(r => r.json()).then(() => { if(action !== 'reset') startPolling(); else updateUI('idle'); });
 }
 
+let lastScanState = '';
 function startPolling() {
     clearInterval(pollInterval);
     pollInterval = setInterval(() => {
@@ -283,9 +284,11 @@ function startPolling() {
                 const ffr = getEl('feat-freq'); if(ffr) ffr.innerText = data.features.connection_frequency;
                 const fa = getEl('feat-anom'); if(fa) fa.innerText = data.features.service_anomaly_score;
                 
-                if(data.state === 'completed') {
+                // Only populate fields exactly when the scan finishes, to allow user edits afterwards
+                if(data.state === 'completed' && lastScanState !== 'completed') {
                     populateManualForm(data.features);
                 }
+                lastScanState = data.state;
             }
 
             if(data.prediction && data.state === 'analysed') {
@@ -326,7 +329,6 @@ function populateManualForm(features) {
     if(btnC) btnC.classList.remove('hidden');
     const form = document.getElementById('detection-form');
     if(form) {
-        form.scrollIntoView({behavior: 'smooth'});
         if(!document.getElementById('scan-indicator')) {
             const ind = document.createElement('div');
             ind.id = 'scan-indicator';

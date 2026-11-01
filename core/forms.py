@@ -6,33 +6,33 @@ class DetectionInputForm(forms.Form):
     duration_seconds = forms.FloatField(
         min_value=0,
         label="Connection duration (seconds)",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     bytes_src_to_dst = forms.FloatField(
         min_value=0,
         label="Source to destination bytes",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     bytes_dst_to_src = forms.FloatField(
         min_value=0,
         label="Destination to source bytes",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     failed_connections = forms.IntegerField(
         min_value=0,
         label="Failed connections",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
-    connection_frequency = forms.IntegerField(
+    connection_frequency = forms.FloatField(
         min_value=0,
         label="Connection frequency",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     service_anomaly_score = forms.FloatField(
         min_value=0,
         max_value=1,
         label="Service anomaly score",
-        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.NumberInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
 
 
@@ -40,13 +40,13 @@ class ManualIncidentForm(forms.Form):
     reporter_name = forms.CharField(
         max_length=150,
         label="Reporter name",
-        widget=forms.TextInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.TextInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     contact_info = forms.CharField(
         max_length=200,
         required=False,
         label="Contact information",
-        widget=forms.TextInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.TextInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     category = forms.ChoiceField(
         choices=[
@@ -58,21 +58,21 @@ class ManualIncidentForm(forms.Form):
             ("other", "Other cybercrime"),
         ],
         label="Incident category",
-        widget=forms.Select(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.Select(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     description = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 5, "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.Textarea(attrs={"rows": 5, "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
         label="Incident description",
     )
     occurred_at = forms.DateTimeField(
         required=False,
         label="Approximate date and time",
-        widget=forms.DateTimeInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "type": "datetime-local"}),
+        widget=forms.DateTimeInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any", "type": "datetime-local"}),
     )
     website_url = forms.URLField(
         required=False,
         label="Relevant website or URL",
-        widget=forms.URLInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.URLInput(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     evidence = forms.FileField(
         required=False,
@@ -103,10 +103,10 @@ class StatusUpdateForm(forms.Form):
             ("resolved", "Resolved"),
             ("closed", "Closed"),
         ],
-        widget=forms.Select(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.Select(attrs={"class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
     )
     review_notes = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 4, "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none"}),
+        widget=forms.Textarea(attrs={"rows": 4, "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any"}),
         required=False,
     )
 
@@ -115,7 +115,7 @@ class MessageDetectionForm(forms.Form):
         label="Paste Message or Email Text",
         widget=forms.Textarea(attrs={
             "rows": 6, 
-            "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none",
+            "class": "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100 focus:border-cyan-500 focus:outline-none", "step": "any",
             "placeholder": "e.g., Dear Customer, your account has been suspended. Click here to verify..."
         }),
         help_text="Paste the full text of the SMS, email, or message you want to analyze."
