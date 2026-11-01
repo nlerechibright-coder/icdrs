@@ -1,3 +1,4 @@
+﻿import dj_database_url
 """
 Django settings for icdrs project.
 
@@ -65,10 +66,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'icdrs.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -104,3 +107,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'management_login'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
