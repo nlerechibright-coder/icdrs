@@ -4,84 +4,122 @@ import random
 import threading
 from datetime import datetime
 
-# Store active simulators in memory
-active_simulators = {}
+active_simulations = {}
 
-class TrafficSimulator:
-    def __init__(self, scenario, user_id):
-        self.scenario = scenario
+DEVICES = ['Workstation 01', 'Laptop 02', 'Office Server', 'Mobile Device', 'Network Printer']
+
+class SimulationSession:
+    def __init__(self, user_id, scenario):
         self.user_id = user_id
-        self.running = False
-        self.paused = False
+        self.scenario = scenario
+        self.state = 'idle' # idle, scanning, completed, analysed
+        self.progress = 0
+        self.devices = {dev: 'normal' for dev in DEVICES}
         self.events = []
+        self.features = None
+        self.prediction = None
         self.thread = None
-        self.latest_features = None
-        self.latest_prediction = None
         self.lock = threading.Lock()
 
     def start(self):
-        if not self.running:
-            self.running = True
-            self.paused = False
+        if self.state in ['idle', 'completed']:
+            self.state = 'scanning'
+            self.progress = 0
             self.events = []
-            self.latest_features = None
-            self.latest_prediction = None
-            self.thread = threading.Thread(target=self._run_loop, daemon=True)
+            self.features = None
+            self.prediction = None
+            self.devices = {dev: 'normal' for dev in DEVICES}
+            self.thread = threading.Thread(target=self._run_scan, daemon=True)
             self.thread.start()
 
     def stop(self):
-        self.running = False
-        self.paused = False
+        self.state = 'idle'
 
-    def pause(self):
-        self.paused = True
+    def reset(self):
+        self.stop()
+        self.progress = 0
+        self.events = []
+        self.features = None
+        self.prediction = None
+        self.devices = {dev: 'normal' for dev in DEVICES}
 
-    def resume(self):
-        self.paused = False
+    def _run_scan(self):
+        # Simulate a scan taking about 10-15 seconds (50 ticks * 0.2s)
+        for i in range(50):
+            if self.state != 'scanning':
+                break
+            with self.lock:
+                self.progress = int((i + 1) / 50 * 100)
+                new_events = self._generate_events()
+                self.events.extend(new_events)
+                self._update_device_status(new_events)
+            time.sleep(0.2) # 200ms per tick
 
-    def _run_loop(self):
-        while self.running:
-            if not self.paused:
-                with self.lock:
-                    new_events = self._generate_events()
-                    self.events.extend(new_events)
-                    self.events = self.events[-50:] # Keep last 50 events
-                    
-                    self.latest_features = self._extract_features(self.events)
-                    
-                    if self.latest_features:
-                        from core.ml import determine_detection_result
-                        self.latest_prediction = determine_detection_result(self.latest_features)
-            
-            time.sleep(2) # Tick every 2 seconds
+        if self.state == 'scanning':
+            with self.lock:
+                self.state = 'completed'
+                self.features = self._extract_features(self.events)
 
     def _generate_events(self):
         events = []
-        count = random.randint(3, 8)
-        
+        count = random.randint(2, 5)
         for _ in range(count):
+            src = random.choice(DEVICES)
+            dst = 'Monitoring Server' if random.random() > 0.3 else random.choice([d for d in DEVICES if d != src])
+            
+            # Base event structure
+            event = {
+                'timestamp': datetime.now().strftime('%H:%M:%S'),
+                'src': src, 'dst': dst,
+                'src_port': random.randint(1024, 65535),
+                'dst_port': random.choice([80, 443, 22, 3389, 8080]),
+                'status': 'success', 'direction': 'outbound',
+                'bytes': 0, 'duration': 0
+            }
+
+            # Scenario logic
             if self.scenario == 'normal':
-                events.append({'duration': random.uniform(10, 60), 'bytes_sent': random.randint(500, 5000), 'bytes_recv': random.randint(1000, 15000), 'failed': 0})
+                event['bytes'] = random.randint(500, 5000)
+                event['duration'] = random.uniform(0.5, 2.0)
             elif self.scenario == 'port_scan':
-                events.append({'duration': random.uniform(0.1, 1.0), 'bytes_sent': random.randint(40, 100), 'bytes_recv': 0, 'failed': 1})
+                event['dst_port'] = random.randint(1, 1024)
+                event['status'] = 'failed'
+                event['bytes'] = random.randint(40, 100)
+                event['duration'] = random.uniform(0.01, 0.1)
             elif self.scenario == 'dos':
-                events.append({'duration': random.uniform(0.01, 0.5), 'bytes_sent': random.randint(1000, 5000), 'bytes_recv': 0, 'failed': 0})
+                event['bytes'] = random.randint(10000, 50000)
+                event['duration'] = random.uniform(0.01, 0.05)
             elif self.scenario == 'brute_force':
-                events.append({'duration': random.uniform(1, 3), 'bytes_sent': random.randint(200, 500), 'bytes_recv': random.randint(100, 300), 'failed': 1})
-            elif self.scenario == 'suspicious':
-                events.append({'duration': random.uniform(2, 5), 'bytes_sent': random.randint(100, 1000), 'bytes_recv': random.randint(100, 1000), 'failed': random.choice([0, 1])})
+                event['dst_port'] = 22
+                event['status'] = 'auth_failed'
+                event['bytes'] = random.randint(200, 500)
+                event['duration'] = random.uniform(0.5, 1.5)
+            elif self.scenario in ['mixed', 'random']:
+                choice = random.choice(['normal', 'port_scan', 'dos', 'brute_force'])
+                # Reuse logic by temporarily setting scenario (simplified for brevity)
+                if choice == 'port_scan': event['status'] = 'failed'; event['bytes'] = 60
+                elif choice == 'dos': event['bytes'] = 20000
+                elif choice == 'brute_force': event['status'] = 'auth_failed'; event['dst_port'] = 22
+                else: event['bytes'] = 1500
+                event['duration'] = random.uniform(0.1, 1.0)
+            
+            events.append(event)
         return events
+
+    def _update_device_status(self, events):
+        for e in events:
+            if e['status'] in ['failed', 'auth_failed']:
+                self.devices[e['src']] = 'suspicious'
 
     def _extract_features(self, events):
         if not events: return None
-        
         duration = sum(e['duration'] for e in events) / len(events)
-        bytes_src_dst = sum(e['bytes_sent'] for e in events)
-        bytes_dst_src = sum(e['bytes_recv'] for e in events)
-        failed = sum(1 for e in events if e['failed'] == 1)
-        frequency = len(events) / 2.0 
-        anomaly = min(1.0, (failed / max(1, len(events))) * 0.7 + (frequency / 20.0) * 0.3)
-
+        bytes_src_dst = sum(e['bytes'] for e in events if e['direction'] == 'outbound')
+        bytes_dst_src = sum(e['bytes'] for e in events if e['direction'] == 'inbound') # Simplified
+        failed = sum(1 for e in events if e['status'] in ['failed', 'auth_failed'])
+        frequency = len(events) / 10.0 # 10 second window
+        anomaly = min(1.0, (failed / max(1, len(events))) * 0.7 + (frequency / 10.0) * 0.3)
+        
         return {
             'duration_seconds': round(duration, 2),
             'bytes_src_to_dst': bytes_src_dst,
@@ -91,12 +129,11 @@ class TrafficSimulator:
             'service_anomaly_score': round(anomaly, 2)
         }
 
-    def get_status(self):
+    def get_state(self):
         with self.lock:
             return {
-                'running': self.running,
-                'paused': self.paused,
-                'events_count': len(self.events),
-                'features': self.latest_features,
-                'prediction': self.latest_prediction
+                'state': self.state, 'progress': self.progress,
+                'devices': self.devices, 'events': self.events[-20:], # Last 20 for feed
+                'total_events': len(self.events),
+                'features': self.features, 'prediction': self.prediction
             }

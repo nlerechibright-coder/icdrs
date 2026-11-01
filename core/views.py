@@ -485,10 +485,17 @@ def user_incidents(request):
     return render(request, 'core/user_incidents.html', {'incidents': incidents})
 
 
+
+
+
+
+
 # --- Network Simulation Endpoints ---
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .simulator import TrafficSimulator, active_simulators
+from .simulator import SimulationSession, active_simulations
+from .ml import determine_detection_result
+from .models import DetectionEvent
 
 @login_required(login_url="management_login")
 @user_passes_test(lambda u: u.is_staff, login_url="management_login")
@@ -498,30 +505,57 @@ def simulation_control(request):
     scenario = request.POST.get('scenario', 'normal')
     user_id = request.user.id
     
-    sim = active_simulators.get(user_id)
+    session = active_simulations.get(user_id)
 
     if action == 'start':
-        if sim and sim.running: sim.stop()
-        sim = TrafficSimulator(scenario, user_id)
-        active_simulators[user_id] = sim
-        sim.start()
-        return JsonResponse({'status': 'started', 'scenario': scenario})
+        if not session or session.state in ['idle', 'completed']:
+            session = SimulationSession(user_id, scenario)
+            active_simulations[user_id] = session
+        session.start()
+        return JsonResponse({'status': 'ok'})
     elif action == 'stop':
-        if sim: sim.stop()
-        return JsonResponse({'status': 'stopped'})
-    elif action == 'pause':
-        if sim: sim.pause()
-        return JsonResponse({'status': 'paused'})
-    elif action == 'resume':
-        if sim: sim.resume()
-        return JsonResponse({'status': 'resumed'})
+        if session: session.stop()
+        return JsonResponse({'status': 'ok'})
+    elif action == 'reset':
+        if session: session.reset()
+        return JsonResponse({'status': 'ok'})
     return JsonResponse({'error': 'Invalid action'}, status=400)
 
 @login_required(login_url="management_login")
 @user_passes_test(lambda u: u.is_staff, login_url="management_login")
 def simulation_status(request):
     user_id = request.user.id
-    sim = active_simulators.get(user_id)
-    if sim:
-        return JsonResponse(sim.get_status())
-    return JsonResponse({'running': False})
+    session = active_simulations.get(user_id)
+    if session:
+        return JsonResponse(session.get_state())
+    return JsonResponse({'state': 'idle'})
+
+@login_required(login_url="management_login")
+@user_passes_test(lambda u: u.is_staff, login_url="management_login")
+@require_POST
+def simulation_analyse(request):
+    user_id = request.user.id
+    session = active_simulations.get(user_id)
+    
+    if not session or session.state != 'completed' or not session.features:
+        return JsonResponse({'error': 'Scan not completed'}, status=400)
+        
+    # Run actual model
+    prediction = determine_detection_result(session.features)
+    session.prediction = prediction
+    
+    # Save to DB
+    DetectionEvent.objects.create(
+        source="simulation",
+        detection_mode="network_simulation",
+        predicted_label=prediction['label'],
+        severity=prediction['severity'],
+        confidence=prediction['confidence'],
+        is_suspicious=prediction['label'] == 'suspicious',
+        explanation=prediction.get('explanation', ''),
+        recommendation=prediction.get('recommendation', ''),
+        feature_summary=session.features,
+        user=request.user
+    )
+    session.state = 'analysed'
+    return JsonResponse({'status': 'ok', 'prediction': prediction})

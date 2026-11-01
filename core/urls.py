@@ -39,4 +39,5 @@ urlpatterns = [
 
     path("management/simulation/control/", views.simulation_control, name="simulation_control"),
     path("management/simulation/status/", views.simulation_status, name="simulation_status"),
+    path("management/simulation/analyse/", views.simulation_analyse, name="simulation_analyse"),
 ]

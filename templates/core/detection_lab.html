@@ -64,126 +64,219 @@
   </div>
 </div>
 
-<!-- === LIVE NETWORK SIMULATION MODULE === -->
+
+
+
+<!-- === PROFESSIONAL NETWORK SIMULATION === -->
 <div class="card-glass rounded-2xl p-6 shadow-glow mt-8 border-t-4 border-cyan-500">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-cyan-400">🌐 Live Network Simulation</h2>
-        <span id="sim-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400">IDLE</span>
+        <h2 class="text-2xl font-bold text-cyan-400">🌐 Live Network Monitoring Simulation</h2>
+        <span id="sim-state-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400">IDLE</span>
     </div>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Controls -->
-        <div class="lg:col-span-1 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Select Attack Scenario</label>
-                <select id="sim-scenario" class="w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2 text-slate-100 focus:border-cyan-500 focus:outline-none">
-                    <option value="normal">Normal Network Activity</option>
-                    <option value="port_scan">Port Scanning Simulation</option>
-                    <option value="dos">DoS-like Traffic Flood</option>
-                    <option value="brute_force">Brute-Force Login Attempt</option>
-                    <option value="suspicious">Suspicious Connection Activity</option>
-                </select>
+
+    <!-- Topology & Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Network Topology -->
+        <div class="lg:col-span-2 bg-slate-900/50 rounded-lg p-4 border border-slate-700 relative overflow-hidden min-h-[200px]">
+            <h3 class="text-sm font-semibold text-cyan-400 mb-4 uppercase">Network Topology (Simulated)</h3>
+            <div class="flex flex-wrap justify-center gap-4 relative z-10">
+                {% for dev in "Workstation 01,Laptop 02,Office Server,Mobile Device,Network Printer".split(',') %}
+                <div id="dev-{{ forloop.counter }}" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">💻</div>
+                    <span class="text-xs text-slate-300 text-center">{{ dev }}</span>
+                </div>
+                {% endfor %}
+                <div class="flex flex-col items-center p-3 rounded-lg bg-cyan-900/30 border border-cyan-500/50 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-slate-900 mb-2 animate-pulse">🖥️</div>
+                    <span class="text-xs text-cyan-300 text-center font-bold">Monitor</span>
+                </div>
             </div>
-            
-            <div class="grid grid-cols-3 gap-2">
-                <button id="btn-start" class="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success/80 transition">Start</button>
-                <button id="btn-pause" class="rounded-lg bg-warn px-4 py-2 text-sm font-semibold text-white hover:bg-warn/80 transition" disabled>Pause</button>
-                <button id="btn-stop" class="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/80 transition" disabled>Stop</button>
+            <!-- Scanning Animation Overlay -->
+            <div id="scan-overlay" class="absolute inset-0 bg-cyan-500/5 pointer-events-none hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-cyan-400 shadow-[0_0_15px_#52d6ff] animate-[scan_2s_ease-in-out_infinite]"></div>
             </div>
         </div>
 
-        <!-- Live Metrics -->
-        <div class="lg:col-span-2 bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-            <h3 class="text-sm font-semibold text-cyan-400 mb-3 uppercase tracking-wider">Live Extraction & Prediction</h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-                <div class="bg-slate-800/50 p-3 rounded-lg">
-                    <p class="text-xs text-slate-400">Events Generated</p>
-                    <p id="stat-events" class="text-xl font-bold text-white">0</p>
-                </div>
-                <div class="bg-slate-800/50 p-3 rounded-lg">
-                    <p class="text-xs text-slate-400">Model Prediction</p>
-                    <p id="stat-prediction" class="text-xl font-bold text-slate-500">-</p>
-                </div>
-                <div class="bg-slate-800/50 p-3 rounded-lg">
-                    <p class="text-xs text-slate-400">Anomaly Score</p>
-                    <p id="stat-anomaly" class="text-xl font-bold text-white">0.00</p>
-                </div>
+        <!-- Metrics -->
+        <div class="space-y-3">
+            <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                <p class="text-xs text-slate-400">Scan Progress</p>
+                <div class="w-full bg-slate-700 rounded-full h-2 mt-1"><div id="progress-bar" class="bg-cyan-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div></div>
+                <p id="progress-text" class="text-right text-xs text-cyan-400 mt-1">0%</p>
             </div>
-            
-            <div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-400 font-mono">
-                <p>Duration: <span id="feat-duration" class="text-slate-200">-</span>s</p>
-                <p>Bytes S->D: <span id="feat-sd" class="text-slate-200">-</span></p>
-                <p>Bytes D->S: <span id="feat-ds" class="text-slate-200">-</span></p>
-                <p>Failed: <span id="feat-failed" class="text-slate-200">-</span></p>
-                <p>Frequency: <span id="feat-freq" class="text-slate-200">-</span></p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-slate-800/50 p-2 rounded text-center"><p class="text-xs text-slate-400">Events</p><p id="metric-events" class="text-lg font-bold text-white">0</p></div>
+                <div class="bg-slate-800/50 p-2 rounded text-center"><p class="text-xs text-slate-400">Suspicious</p><p id="metric-suspicious" class="text-lg font-bold text-danger">0</p></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Controls & Feed -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div class="space-y-3">
+            <select id="sim-scenario" class="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-slate-100">
+                <option value="normal">Normal Network Activity</option>
+                <option value="port_scan">Port Scanning</option>
+                <option value="dos">DoS-like Activity</option>
+                <option value="brute_force">Brute-Force Attempts</option>
+                <option value="mixed">Mixed Network Activity</option>
+                <option value="random">Random Simulation</option>
+            </select>
+            <div class="grid grid-cols-3 gap-2">
+                <button id="btn-start" class="bg-success text-white py-2 rounded font-semibold hover:bg-success/80">Start</button>
+                <button id="btn-stop" class="bg-danger text-white py-2 rounded font-semibold hover:bg-danger/80" disabled>Stop</button>
+                <button id="btn-reset" class="bg-slate-600 text-white py-2 rounded font-semibold hover:bg-slate-500">Reset</button>
+            </div>
+        </div>
+        <div class="lg:col-span-2 bg-slate-900/80 rounded-lg p-3 border border-slate-700 h-48 overflow-y-auto font-mono text-xs" id="event-feed">
+            <p class="text-slate-500 text-center mt-16">Waiting for scan to start...</p>
+        </div>
+    </div>
+
+    <!-- Features & Analysis (Hidden until completed) -->
+    <div id="analysis-section" class="hidden border-t border-slate-700 pt-6">
+        <h3 class="text-lg font-bold text-white mb-4">Extracted Features & Analysis</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Duration (s)</p><p id="feat-dur" class="font-bold text-cyan-400">-</p></div>
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Bytes S->D</p><p id="feat-sd" class="font-bold text-cyan-400">-</p></div>
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Bytes D->S</p><p id="feat-ds" class="font-bold text-cyan-400">-</p></div>
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Failed</p><p id="feat-fail" class="font-bold text-cyan-400">-</p></div>
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Frequency</p><p id="feat-freq" class="font-bold text-cyan-400">-</p></div>
+            <div class="bg-slate-800 p-3 rounded text-center"><p class="text-xs text-slate-400">Anomaly</p><p id="feat-anom" class="font-bold text-cyan-400">-</p></div>
+        </div>
+        
+        <div class="flex flex-wrap gap-3 justify-center">
+            <button id="btn-analyse" class="bg-cyan-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-cyan-500 hidden">🔍 ANALYSE GENERATED TRAFFIC</button>
+            <button id="btn-use-results" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-500 hidden">⬇️ USE SCAN RESULTS</button>
+        </div>
+
+        <!-- Prediction Result -->
+        <div id="prediction-result" class="hidden mt-6 p-4 rounded-lg border text-center">
+            <h4 class="text-xl font-bold mb-2" id="pred-label"></h4>
+            <p class="text-sm text-slate-300" id="pred-explanation"></p>
         </div>
     </div>
 </div>
 
+<style>
+@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+.device-suspicious { border-color: #f87171 !important; background: rgba(248, 113, 113, 0.1) !important; }
+.device-suspicious .device-icon { background: rgba(248, 113, 113, 0.2) !important; color: #f87171 !important; }
+</style>
+
 <script>
-    let pollInterval;
-    const btnStart = document.getElementById('btn-start');
-    const btnPause = document.getElementById('btn-pause');
-    const btnStop = document.getElementById('btn-stop');
-    const scenarioSelect = document.getElementById('sim-scenario');
-    const statusBadge = document.getElementById('sim-status-badge');
+let pollInterval;
+const getEl = id => document.getElementById(id);
 
-    function updateUI(state) {
-        if (state === 'running') {
-            btnStart.disabled = true; btnPause.disabled = false; btnStop.disabled = false;
-            scenarioSelect.disabled = true;
-            statusBadge.innerText = 'RUNNING'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-success/20 text-success';
-        } else if (state === 'paused') {
-            btnStart.disabled = true; btnPause.disabled = true; btnStop.disabled = false;
-            statusBadge.innerText = 'PAUSED'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-warn/20 text-warn';
-        } else {
-            btnStart.disabled = false; btnPause.disabled = true; btnStop.disabled = true;
-            scenarioSelect.disabled = false;
-            statusBadge.innerText = 'IDLE'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400';
-        }
+function updateUI(state) {
+    const badge = getEl('sim-state-badge');
+    const overlay = getEl('scan-overlay');
+    const btnStart = getEl('btn-start'), btnStop = getEl('btn-stop');
+    const scenario = getEl('sim-scenario'), analysisSec = getEl('analysis-section');
+    const btnAnalyse = getEl('btn-analyse'), btnUse = getEl('btn-use-results'), predRes = getEl('prediction-result');
+
+    badge.className = 'px-3 py-1 rounded-full text-xs font-bold ';
+    if (state === 'scanning') {
+        badge.innerText = 'SCANNING'; badge.classList.add('bg-cyan-500/20', 'text-cyan-400');
+        overlay.classList.remove('hidden'); btnStart.disabled = true; btnStop.disabled = false; scenario.disabled = true;
+        analysisSec.classList.add('hidden'); predRes.classList.add('hidden');
+    } else if (state === 'completed') {
+        badge.innerText = 'SCAN COMPLETED'; badge.classList.add('bg-success/20', 'text-success');
+        overlay.classList.add('hidden'); btnStart.disabled = true; btnStop.disabled = true; scenario.disabled = false;
+        analysisSec.classList.remove('hidden'); btnAnalyse.classList.remove('hidden'); btnUse.classList.remove('hidden');
+    } else if (state === 'analysed') {
+        badge.innerText = 'ANALYSED'; badge.classList.add('bg-indigo-500/20', 'text-indigo-400');
+        overlay.classList.add('hidden'); btnStart.disabled = true; btnStop.disabled = true;
+        analysisSec.classList.remove('hidden'); btnAnalyse.classList.add('hidden'); btnUse.classList.remove('hidden');
+    } else { // idle
+        badge.innerText = 'IDLE'; badge.classList.add('bg-slate-700', 'text-slate-400');
+        overlay.classList.add('hidden'); btnStart.disabled = false; btnStop.disabled = true; scenario.disabled = false;
+        analysisSec.classList.add('hidden'); predRes.classList.add('hidden');
+        getEl('progress-bar').style.width = '0%'; getEl('progress-text').innerText = '0%';
+        getEl('event-feed').innerHTML = '<p class="text-slate-500 text-center mt-16">Waiting for scan to start...</p>';
+        document.querySelectorAll('[id^="dev-"]').forEach(el => el.classList.remove('device-suspicious'));
     }
+}
 
-    function sendControl(action) {
-        const formData = new FormData();
-        formData.append('action', action);
-        if(action === 'start') formData.append('scenario', scenarioSelect.value);
-        
-        fetch("{% url 'simulation_control' %}", { method: 'POST', body: formData, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
-        .then(r => r.json()).then(data => {
-            updateUI(data.status === 'started' ? 'running' : (data.status === 'paused' ? 'paused' : 'stopped'));
-            if(data.status === 'started') startPolling();
-            if(data.status === 'stopped') stopPolling();
+function sendControl(action) {
+    const fd = new FormData(); fd.append('action', action);
+    if(action === 'start') fd.append('scenario', getEl('sim-scenario').value);
+    fetch("{% url 'simulation_control' %}", { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+    .then(r => r.json()).then(() => { if(action !== 'reset') startPolling(); else updateUI('idle'); });
+}
+
+function startPolling() {
+    clearInterval(pollInterval);
+    pollInterval = setInterval(() => {
+        fetch("{% url 'simulation_status' %}").then(r => r.json()).then(data => {
+            updateUI(data.state);
+            getEl('progress-bar').style.width = data.progress + '%';
+            getEl('progress-text').innerText = data.progress + '%';
+            getEl('metric-events').innerText = data.total_events;
+            
+            // Update devices
+            if(data.devices) {
+                Object.entries(data.devices).forEach((dev, idx) => {
+                    const el = getEl(`dev-${idx+1}`);
+                    if(el) { if(dev[1] === 'suspicious') el.classList.add('device-suspicious'); else el.classList.remove('device-suspicious'); }
+                });
+            }
+
+            // Update feed
+            if(data.events && data.events.length > 0) {
+                const feed = getEl('event-feed');
+                const lastEvent = data.events[data.events.length - 1];
+                const color = lastEvent.status === 'success' ? 'text-success' : 'text-danger';
+                feed.innerHTML = `<p class="${color}">[${lastEvent.timestamp}] ${lastEvent.src} -> ${lastEvent.dst}:${lastEvent.dst_port} (${lastEvent.status})</p>` + feed.innerHTML;
+                if(feed.children.length > 50) feed.removeChild(feed.lastChild);
+            }
+
+            // Update features
+            if(data.features) {
+                getEl('feat-dur').innerText = data.features.duration_seconds;
+                getEl('feat-sd').innerText = data.features.bytes_src_to_dst;
+                getEl('feat-ds').innerText = data.features.bytes_dst_to_src;
+                getEl('feat-fail').innerText = data.features.failed_connections;
+                getEl('feat-freq').innerText = data.features.connection_frequency;
+                getEl('feat-anom').innerText = data.features.service_anomaly_score;
+            }
+
+            // Update prediction
+            if(data.prediction && data.state === 'analysed') {
+                const predRes = getEl('prediction-result');
+                predRes.classList.remove('hidden');
+                predRes.className = 'mt-6 p-4 rounded-lg border text-center ' + (data.prediction.label === 'suspicious' ? 'bg-danger/10 border-danger text-danger' : 'bg-success/10 border-success text-success');
+                getEl('pred-label').innerText = data.prediction.label.toUpperCase();
+                getEl('pred-explanation').innerText = data.prediction.explanation;
+            }
         });
-    }
+    }, 1000);
+}
 
-    function startPolling() {
-        pollInterval = setInterval(() => {
-            fetch("{% url 'simulation_status' %}").then(r => r.json()).then(data => {
-                document.getElementById('stat-events').innerText = data.events_count || 0;
-                if (data.prediction) {
-                    const pred = data.prediction.label || 'Unknown';
-                    const predEl = document.getElementById('stat-prediction');
-                    predEl.innerText = pred;
-                    predEl.className = 'text-xl font-bold ' + (pred.toLowerCase() === 'suspicious' ? 'text-danger' : 'text-success');
-                }
-                if (data.features) {
-                    document.getElementById('feat-duration').innerText = data.features.duration_seconds;
-                    document.getElementById('feat-sd').innerText = data.features.bytes_src_to_dst;
-                    document.getElementById('feat-ds').innerText = data.features.bytes_dst_to_src;
-                    document.getElementById('feat-failed').innerText = data.features.failed_connections;
-                    document.getElementById('feat-freq').innerText = data.features.connection_frequency;
-                    document.getElementById('stat-anomaly').innerText = data.features.service_anomaly_score;
-                }
-            });
-        }, 2000);
-    }
+// Use Scan Results -> Populate manual form
+getEl('btn-use-results').addEventListener('click', () => {
+    const f = {
+        'id_duration_seconds': getEl('feat-dur').innerText,
+        'id_bytes_src_to_dst': getEl('feat-sd').innerText,
+        'id_bytes_dst_to_src': getEl('feat-ds').innerText,
+        'id_failed_connections': getEl('feat-fail').innerText,
+        'id_connection_frequency': getEl('feat-freq').innerText,
+        'id_service_anomaly_score': getEl('feat-anom').innerText
+    };
+    Object.entries(f).forEach(([id, val]) => { const el = getEl(id); if(el) el.value = val; });
+    alert('Scan results transferred to manual detection form above!');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
-    function stopPolling() { clearInterval(pollInterval); }
+getEl('btn-analyse').addEventListener('click', () => {
+    const fd = new FormData(); fd.append('action', 'analyse');
+    fetch("{% url 'simulation_analyse' %}", { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+    .then(r => r.json()).then(data => { if(data.status === 'ok') updateUI('analysed'); });
+});
 
-    btnStart.addEventListener('click', () => sendControl('start'));
-    btnPause.addEventListener('click', () => sendControl('pause'));
-    btnStop.addEventListener('click', () => sendControl('stop'));
+getEl('btn-start').addEventListener('click', () => sendControl('start'));
+getEl('btn-stop').addEventListener('click', () => sendControl('stop'));
+getEl('btn-reset').addEventListener('click', () => sendControl('reset'));
 </script>
 
 {% endblock %}
