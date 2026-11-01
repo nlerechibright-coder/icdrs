@@ -187,28 +187,58 @@ function updateUI(state) {
     const overlay = getEl('scan-overlay');
     const btnStart = getEl('btn-start'), btnStop = getEl('btn-stop');
     const scenario = getEl('sim-scenario'), analysisSec = getEl('analysis-section');
-    const btnAnalyse = getEl('btn-analyse'), btnUse = getEl('btn-use-results'), predRes = getEl('prediction-result');
+    const btnAnalyse = getEl('btn-analyse-scan'), btnCancel = getEl('btn-cancel-scan'), predRes = getEl('prediction-result');
+
+    if (!badge) return;
 
     badge.className = 'px-3 py-1 rounded-full text-xs font-bold ';
     if (state === 'scanning') {
         badge.innerText = 'SCANNING'; badge.classList.add('bg-cyan-500/20', 'text-cyan-400');
-        overlay.classList.remove('hidden'); btnStart.disabled = true; btnStop.disabled = false; scenario.disabled = true;
-        analysisSec.classList.add('hidden'); predRes.classList.add('hidden');
+        if(overlay) overlay.classList.remove('hidden'); 
+        if(btnStart) btnStart.disabled = true; 
+        if(btnStop) btnStop.disabled = false; 
+        if(scenario) scenario.disabled = true;
+        if(analysisSec) analysisSec.classList.add('hidden'); 
+        if(predRes) predRes.classList.add('hidden');
     } else if (state === 'completed') {
         badge.innerText = 'SCAN COMPLETED'; badge.classList.add('bg-success/20', 'text-success');
-        overlay.classList.add('hidden'); btnStart.disabled = true; btnStop.disabled = true; scenario.disabled = false;
-        analysisSec.classList.remove('hidden'); btnAnalyse.classList.remove('hidden'); btnUse.classList.remove('hidden');
+        if(overlay) overlay.classList.add('hidden'); 
+        if(btnStart) btnStart.disabled = true; 
+        if(btnStop) btnStop.disabled = true; 
+        if(scenario) scenario.disabled = false;
+        if(analysisSec) analysisSec.classList.remove('hidden'); 
+        if(btnAnalyse) btnAnalyse.classList.remove('hidden'); 
+        if(btnCancel) btnCancel.classList.remove('hidden');
     } else if (state === 'analysed') {
         badge.innerText = 'ANALYSED'; badge.classList.add('bg-indigo-500/20', 'text-indigo-400');
-        overlay.classList.add('hidden'); btnStart.disabled = true; btnStop.disabled = true;
-        analysisSec.classList.remove('hidden'); btnAnalyse.classList.add('hidden'); btnUse.classList.remove('hidden');
-    } else { // idle
+        if(overlay) overlay.classList.add('hidden'); 
+        if(btnStart) btnStart.disabled = true; 
+        if(btnStop) btnStop.disabled = true;
+        if(analysisSec) analysisSec.classList.remove('hidden'); 
+        if(btnAnalyse) btnAnalyse.classList.add('hidden'); 
+        if(btnCancel) btnCancel.classList.remove('hidden');
+    } else {
         badge.innerText = 'IDLE'; badge.classList.add('bg-slate-700', 'text-slate-400');
-        overlay.classList.add('hidden'); btnStart.disabled = false; btnStop.disabled = true; scenario.disabled = false;
-        analysisSec.classList.add('hidden'); predRes.classList.add('hidden');
-        getEl('progress-bar').style.width = '0%'; getEl('progress-text').innerText = '0%';
-        getEl('event-feed').innerHTML = '<p class="text-slate-500 text-center mt-16">Waiting for scan to start...</p>';
+        if(overlay) overlay.classList.add('hidden'); 
+        if(btnStart) btnStart.disabled = false; 
+        if(btnStop) btnStop.disabled = true; 
+        if(scenario) scenario.disabled = false;
+        if(analysisSec) analysisSec.classList.add('hidden'); 
+        if(predRes) predRes.classList.add('hidden');
+        const pb = getEl('progress-bar'); if(pb) pb.style.width = '0%'; 
+        const pt = getEl('progress-text'); if(pt) pt.innerText = '0%';
+        const feed = getEl('event-feed'); if(feed) feed.innerHTML = '<p class="text-slate-500 text-center mt-16">Waiting for scan to start...</p>';
         document.querySelectorAll('[id^="dev-"]').forEach(el => el.classList.remove('device-suspicious'));
+        
+        const fieldNames = ['duration_seconds', 'bytes_src_to_dst', 'bytes_dst_to_src', 'failed_connections', 'connection_frequency', 'service_anomaly_score'];
+        fieldNames.forEach(name => { 
+            let el = document.querySelector('input[name="' + name + '"]') || document.getElementById('id_' + name) || document.getElementById(name);
+            if(el) { el.value = ''; el.classList.remove('bg-cyan-900/30', 'border-cyan-500'); } 
+        });
+        const ind = document.getElementById('scan-indicator');
+        if(ind) ind.remove();
+        if(btnAnalyse) btnAnalyse.classList.add('hidden');
+        if(btnCancel) btnCancel.classList.add('hidden');
     }
 }
 
@@ -224,54 +254,53 @@ function startPolling() {
     pollInterval = setInterval(() => {
         fetch("{% url 'simulation_status' %}").then(r => r.json()).then(data => {
             updateUI(data.state);
-            getEl('progress-bar').style.width = data.progress + '%';
-            getEl('progress-text').innerText = data.progress + '%';
-            getEl('metric-events').innerText = data.total_events;
+            const pb = getEl('progress-bar'); if(pb) pb.style.width = data.progress + '%';
+            const pt = getEl('progress-text'); if(pt) pt.innerText = data.progress + '%';
+            const me = getEl('metric-events'); if(me) me.innerText = data.total_events;
             
-            // Update devices
             if(data.devices) {
                 Object.entries(data.devices).forEach((dev, idx) => {
-                    const el = getEl(`dev-${idx+1}`);
+                    const el = getEl('dev-' + (idx+1));
                     if(el) { if(dev[1] === 'suspicious') el.classList.add('device-suspicious'); else el.classList.remove('device-suspicious'); }
                 });
             }
 
-            // Update feed
             if(data.events && data.events.length > 0) {
                 const feed = getEl('event-feed');
-                const lastEvent = data.events[data.events.length - 1];
-                const color = lastEvent.status === 'success' ? 'text-success' : 'text-danger';
-                feed.innerHTML = `<p class="${color}">[${lastEvent.timestamp}] ${lastEvent.src} -> ${lastEvent.dst}:${lastEvent.dst_port} (${lastEvent.status})</p>` + feed.innerHTML;
-                if(feed.children.length > 50) feed.removeChild(feed.lastChild);
+                if(feed) {
+                    const lastEvent = data.events[data.events.length - 1];
+                    const color = lastEvent.status === 'success' ? 'text-success' : 'text-danger';
+                    feed.innerHTML = '<p class="' + color + '">[' + lastEvent.timestamp + '] ' + lastEvent.src + ' -> ' + lastEvent.dst + ':' + lastEvent.dst_port + ' (' + lastEvent.status + ')</p>' + feed.innerHTML;
+                    if(feed.children.length > 50) feed.removeChild(feed.lastChild);
+                }
             }
 
-            // Update features and populate form if completed
             if(data.features) {
-                getEl('feat-dur').innerText = data.features.duration_seconds;
-                getEl('feat-sd').innerText = data.features.bytes_src_to_dst;
-                getEl('feat-ds').innerText = data.features.bytes_dst_to_src;
-                getEl('feat-fail').innerText = data.features.failed_connections;
-                getEl('feat-freq').innerText = data.features.connection_frequency;
-                getEl('feat-anom').innerText = data.features.service_anomaly_score;
+                const fd_el = getEl('feat-dur'); if(fd_el) fd_el.innerText = data.features.duration_seconds;
+                const fsd = getEl('feat-sd'); if(fsd) fsd.innerText = data.features.bytes_src_to_dst;
+                const fds = getEl('feat-ds'); if(fds) fds.innerText = data.features.bytes_dst_to_src;
+                const ff = getEl('feat-fail'); if(ff) ff.innerText = data.features.failed_connections;
+                const ffr = getEl('feat-freq'); if(ffr) ffr.innerText = data.features.connection_frequency;
+                const fa = getEl('feat-anom'); if(fa) fa.innerText = data.features.service_anomaly_score;
                 
                 if(data.state === 'completed') {
                     populateManualForm(data.features);
                 }
             }
 
-            // Update prediction
             if(data.prediction && data.state === 'analysed') {
                 const predRes = getEl('prediction-result');
-                predRes.classList.remove('hidden');
-                predRes.className = 'mt-6 p-4 rounded-lg border text-center ' + (data.prediction.label === 'suspicious' ? 'bg-danger/10 border-danger text-danger' : 'bg-success/10 border-success text-success');
-                getEl('pred-label').innerText = data.prediction.label.toUpperCase();
-                getEl('pred-explanation').innerText = data.prediction.explanation;
+                if(predRes) {
+                    predRes.classList.remove('hidden');
+                    predRes.className = 'mt-6 p-4 rounded-lg border text-center ' + (data.prediction.label === 'suspicious' ? 'bg-danger/10 border-danger text-danger' : 'bg-success/10 border-success text-success');
+                    const pl = getEl('pred-label'); if(pl) pl.innerText = data.prediction.label.toUpperCase();
+                    const pe = getEl('pred-explanation'); if(pe) pe.innerText = data.prediction.explanation;
+                }
             }
         });
     }, 1000);
 }
 
-// Populate manual form fields when scan completes
 function populateManualForm(features) {
     if (!features) return;
     console.log('Populating with:', features);
@@ -302,53 +331,28 @@ function populateManualForm(features) {
             const ind = document.createElement('div');
             ind.id = 'scan-indicator';
             ind.className = 'bg-success/20 border border-success text-success px-4 py-2 rounded mb-4 text-center font-semibold';
-            ind.innerText = 'Values automatically populated from completed network scan';
+            ind.innerText = '✅ Values automatically populated from completed network scan';
             form.insertBefore(ind, form.firstChild);
         }
     }
-};
-    Object.entries(fieldMap).forEach(([id, val]) => { 
-        const el = getEl(id); 
-        if(el) { el.value = val; el.classList.add('bg-cyan-900/30', 'border-cyan-500'); } // Highlight populated fields
-    });
-    // Show action buttons
-    getEl('btn-analyse-scan').classList.remove('hidden');
-    getEl('btn-cancel-scan').classList.remove('hidden');
-    // Scroll to form
-    const formEl = getEl('detection-form');
-    if(formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ANALYSE button: Submit the populated manual form to the existing detection endpoint
-getEl('btn-analyse-scan').addEventListener('click', () => {
-    const form = getEl('detection-form');
+getEl('btn-analyse-scan')?.addEventListener('click', () => {
+    const form = document.getElementById('detection-form');
     if (form) {
-        // Remove highlight classes before submission
         document.querySelectorAll('.bg-cyan-900\\/30').forEach(el => el.classList.remove('bg-cyan-900/30', 'border-cyan-500'));
+        const ind = document.getElementById('scan-indicator');
+        if(ind) ind.remove();
         form.submit();
-    } else {
-        alert('Could not find the detection form. Please try manually.');
     }
 });
 
-// CANCEL button: Clear fields and reset simulation
-getEl('btn-cancel-scan').addEventListener('click', () => {
-    const fieldIds = ['id_duration_seconds', 'id_bytes_src_to_dst', 'id_bytes_dst_to_src', 'id_failed_connections', 'id_connection_frequency', 'id_service_anomaly_score'];
-    fieldIds.forEach(id => { 
-        const el = getEl(id); 
-        if(el) { el.value = ''; el.classList.remove('bg-cyan-900/30', 'border-cyan-500'); } 
-    });
-    getEl('btn-analyse-scan').classList.add('hidden');
-    getEl('btn-cancel-scan').classList.add('hidden');
-    
-    const fd = new FormData(); fd.append('action', 'reset');
-    fetch("{% url 'simulation_control' %}", { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
-    .then(() => updateUI('idle'));
+getEl('btn-cancel-scan')?.addEventListener('click', () => {
+    updateUI('idle');
 });
 
-getEl('btn-start').addEventListener('click', () => sendControl('start'));
-getEl('btn-stop').addEventListener('click', () => sendControl('stop'));
-getEl('btn-reset').addEventListener('click', () => sendControl('reset'));
+getEl('btn-start')?.addEventListener('click', () => sendControl('start'));
+getEl('btn-stop')?.addEventListener('click', () => sendControl('stop'));
+getEl('btn-reset')?.addEventListener('click', () => sendControl('reset'));
 </script>
-
 {% endblock %}
