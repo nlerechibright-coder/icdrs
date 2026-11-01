@@ -274,14 +274,39 @@ function startPolling() {
 // Populate manual form fields when scan completes
 function populateManualForm(features) {
     if (!features) return;
-    const fieldMap = {
-        'id_duration_seconds': features.duration_seconds,
-        'id_bytes_src_to_dst': features.bytes_src_to_dst,
-        'id_bytes_dst_to_src': features.bytes_dst_to_src,
-        'id_failed_connections': features.failed_connections,
-        'id_connection_frequency': features.connection_frequency,
-        'id_service_anomaly_score': features.service_anomaly_score
+    console.log('Populating with:', features);
+    const map = {
+        'duration_seconds': features.duration_seconds,
+        'bytes_src_to_dst': features.bytes_src_to_dst,
+        'bytes_dst_to_src': features.bytes_dst_to_src,
+        'failed_connections': features.failed_connections,
+        'connection_frequency': features.connection_frequency,
+        'service_anomaly_score': features.service_anomaly_score
     };
+    Object.entries(map).forEach(([key, val]) => {
+        let el = document.querySelector('input[name="' + key + '"]') || document.getElementById('id_' + key) || document.getElementById(key);
+        if (el) {
+            el.value = val;
+            el.classList.add('bg-cyan-900/30', 'border-cyan-500');
+            console.log('Set ' + key + ' to ' + val);
+        }
+    });
+    const btnA = document.getElementById('btn-analyse-scan');
+    const btnC = document.getElementById('btn-cancel-scan');
+    if(btnA) btnA.classList.remove('hidden');
+    if(btnC) btnC.classList.remove('hidden');
+    const form = document.getElementById('detection-form');
+    if(form) {
+        form.scrollIntoView({behavior: 'smooth'});
+        if(!document.getElementById('scan-indicator')) {
+            const ind = document.createElement('div');
+            ind.id = 'scan-indicator';
+            ind.className = 'bg-success/20 border border-success text-success px-4 py-2 rounded mb-4 text-center font-semibold';
+            ind.innerText = 'Values automatically populated from completed network scan';
+            form.insertBefore(ind, form.firstChild);
+        }
+    }
+};
     Object.entries(fieldMap).forEach(([id, val]) => { 
         const el = getEl(id); 
         if(el) { el.value = val; el.classList.add('bg-cyan-900/30', 'border-cyan-500'); } // Highlight populated fields
