@@ -73,7 +73,10 @@ def detection_lab(request):
 
 def detection_result(request, pk):
     event = get_object_or_404(DetectionEvent, pk=pk)
-    incident = event.incidents.first()
+    # Safely get the incident (handles OneToOneField reverse relation)
+    incident = getattr(event, 'incident', None) or getattr(event, 'incidents', None)
+    if hasattr(incident, 'first'):
+        incident = incident.first()
     return render(request, "core/detection_result.html", {"event": event, "incident": incident})
 
 def detection_history(request):
