@@ -52,58 +52,5 @@
     </div>
     {% endif %}
   </div>
-
-    {% if user.is_staff %}
-    <div class="card-glass rounded-2xl p-6 shadow-glow mt-6 border-2 border-danger">
-        <h3 class="text-xl font-bold text-danger mb-4">️ Security Actions</h3>
-        <p class="text-slate-300 mb-4">If this detection represents a genuine threat, you can block the source immediately.</p>
-        
-        <button onclick="document.getElementById('quick-block-modal').classList.remove('hidden')" 
-                class="w-full bg-danger text-white px-6 py-3 rounded-lg font-bold hover:bg-danger/80 transition shadow-lg">
-             Block This Source
-        </button>
-        
-        <a href="{% url 'incident_response_dashboard' %}" 
-           class="block mt-3 text-center text-cyan-400 hover:text-cyan-300 text-sm">
-            View All Incidents & Blocklist Management
-        </a>
-    </div>
-    
-    <!-- Quick Block Modal -->
-    <div id="quick-block-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
-        <div class="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
-            <h3 class="text-xl font-bold text-white mb-4">Block Source</h3>
-            <form method="post" action="{% url 'block_source' event.pk %}">
-                {% csrf_token %}
-                <div class="mb-4">
-                    <label class="block text-sm text-slate-300 mb-2">Source Device</label>
-                    <input type="text" name="source_device" required 
-                           class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white"
-                           value="{% if event.feature_summary.src_device %}{{ event.feature_summary.src_device }}{% else %}Unknown Device{% endif %}">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm text-slate-300 mb-2">Source IP (optional)</label>
-                    <input type="text" name="source_ip" 
-                           class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white"
-                           placeholder="192.168.1.100">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm text-slate-300 mb-2">Reason for Blocking</label>
-                    <textarea name="reason" rows="3" required
-                              class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white"
-                              placeholder="e.g., Confirmed port scanning attack"></textarea>
-                </div>
-                <div class="flex gap-3">
-                    <button type="submit" class="flex-1 px-4 py-2 bg-danger text-white rounded hover:bg-danger/80">
-                        Confirm Block
-                    </button>
-                    <button type="button" onclick="document.getElementById('quick-block-modal').classList.add('hidden')" 
-                            class="flex-1 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
