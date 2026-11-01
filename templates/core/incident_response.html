@@ -1,0 +1,158 @@
+{% extends "core/base.html" %}
+{% block title %}Incident Response | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-cyan-400 mb-6">Incident Response Dashboard</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-sm text-slate-400">Total Incidents</p>
+            <p class="text-2xl font-bold text-white">{{ total_incidents }}</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-sm text-slate-400">Open Incidents</p>
+            <p class="text-2xl font-bold text-amber-400">{{ open_incidents }}</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-sm text-slate-400">Blocked Sources</p>
+            <p class="text-2xl font-bold text-danger">{{ blocked_sources }}</p>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+            <p class="text-sm text-slate-400">False Positives</p>
+            <p class="text-2xl font-bold text-slate-300">{{ false_positives }}</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg border border-slate-700 mb-8">
+        <div class="p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Suspicious Detections Requiring Review</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-900 text-slate-300 text-sm">
+                    <tr>
+                        <th class="px-4 py-3">Date/Time</th>
+                        <th class="px-4 py-3">Source</th>
+                        <th class="px-4 py-3">Scenario</th>
+                        <th class="px-4 py-3">Prediction</th>
+                        <th class="px-4 py-3">Severity</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700">
+                    {% for detection in suspicious_detections %}
+                    <tr class="hover:bg-slate-700/50">
+                        <td class="px-4 py-3 text-sm">{{ detection.created_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-4 py-3 text-sm">{{ detection.feature_summary.src_device|default:"Unknown" }}</td>
+                        <td class="px-4 py-3 text-sm">{{ detection.detection_mode }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded text-xs font-bold {% if detection.predicted_label == 'suspicious' %}bg-danger/20 text-danger{% else %}bg-success/20 text-success{% endif %}">
+                                {{ detection.predicted_label|upper }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm capitalize">{{ detection.severity }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            {% if detection.responses.exists %}
+                                <span class="text-success">Responded</span>
+                            {% else %}
+                                <span class="text-amber-400">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex gap-2">
+                                <button onclick="document.getElementById('block-modal-{{ detection.id }}').classList.remove('hidden')" class="px-3 py-1 bg-danger text-white text-xs rounded hover:bg-danger/80">Block Source</button>
+                                <button onclick="document.getElementById('fp-modal-{{ detection.id }}').classList.remove('hidden')" class="px-3 py-1 bg-slate-600 text-white text-xs rounded hover:bg-slate-500">False Positive</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg border border-slate-700">
+        <div class="p-4 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white">Active Blocked Sources</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-900 text-slate-300 text-sm">
+                    <tr>
+                        <th class="px-4 py-3">Source Device</th>
+                        <th class="px-4 py-3">Source IP</th>
+                        <th class="px-4 py-3">Reason</th>
+                        <th class="px-4 py-3">Blocked By</th>
+                        <th class="px-4 py-3">Blocked At</th>
+                        <th class="px-4 py-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700">
+                    {% for block in active_blocks %}
+                    <tr class="hover:bg-slate-700/50">
+                        <td class="px-4 py-3 text-sm">{{ block.source_device }}</td>
+                        <td class="px-4 py-3 text-sm">{{ block.source_ip|default:"N/A" }}</td>
+                        <td class="px-4 py-3 text-sm">{{ block.reason|default:"-" }}</td>
+                        <td class="px-4 py-3 text-sm">{{ block.blocked_by.username|default:"Unknown" }}</td>
+                        <td class="px-4 py-3 text-sm">{{ block.blocked_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-4 py-3">
+                            <form method="post" action="{% url 'unblock_source' block.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1 bg-success text-white text-xs rounded hover:bg-success/80" onclick="return confirm('Unblock {{ block.source_device }}?')">Unblock</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No active blocks</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% for detection in suspicious_detections %}
+<div id="block-modal-{{ detection.id }}" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+    <div class="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
+        <h3 class="text-xl font-bold text-white mb-4">Block Source</h3>
+        <form method="post" action="{% url 'block_source' detection.id %}">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-sm text-slate-300 mb-2">Source Device</label>
+                <input type="text" name="source_device" required class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white" value="{{ detection.feature_summary.src_device|default:'Unknown Device' }}">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm text-slate-300 mb-2">Source IP (optional)</label>
+                <input type="text" name="source_ip" class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white" placeholder="192.168.1.100">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm text-slate-300 mb-2">Reason for Blocking</label>
+                <textarea name="reason" rows="3" class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white" placeholder="e.g., Repeated port scanning attempts"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 px-4 py-2 bg-danger text-white rounded hover:bg-danger/80">Confirm Block</button>
+                <button type="button" onclick="document.getElementById('block-modal-{{ detection.id }}').classList.add('hidden')" class="flex-1 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="fp-modal-{{ detection.id }}" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+    <div class="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
+        <h3 class="text-xl font-bold text-white mb-4">Mark as False Positive</h3>
+        <form method="post" action="{% url 'mark_false_positive' detection.id %}">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-sm text-slate-300 mb-2">Reason (optional)</label>
+                <textarea name="reason" rows="3" class="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-white" placeholder="Why is this a false positive?"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-500">Mark as False Positive</button>
+                <button type="button" onclick="document.getElementById('fp-modal-{{ detection.id }}').classList.add('hidden')" class="flex-1 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,5 +1,4 @@
 from django.urls import path
-
 from . import views
 
 urlpatterns = [
@@ -17,6 +16,13 @@ urlpatterns = [
     path("management/incidents/<int:pk>/evidence/", views.download_incident_evidence, name="download_incident_evidence"),
     path("management/incidents/<int:pk>/export/", views.export_incident_report, name="export_incident_report"),
     path("management/model-status/", views.model_status, name="model_status"),
+
+    # Incident Response URLs
+    path("management/response/", views.incident_response_dashboard, name="incident_response_dashboard"),
+    path("management/response/block/<int:detection_id>/", views.block_source, name="block_source"),
+    path("management/response/unblock/<int:blocklist_id>/", views.unblock_source, name="unblock_source"),
+    path("management/response/false-positive/<int:detection_id>/", views.mark_false_positive, name="mark_false_positive"),
+    path("management/response/resolve/<int:detection_id>/", views.resolve_incident, name="resolve_incident"),
 
     path("message-detect/", views.message_detection, name="message_detection"),
     path("message-detect/result/<int:pk>/", views.message_result, name="message_result"),
