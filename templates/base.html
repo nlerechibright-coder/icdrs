@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}ICDRS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#071a2d',
+                        midnight: '#0d1b2a',
+                        cyan: '#52d6ff',
+                        slate: '#cbd5e1',
+                        danger: '#f87171',
+                        warn: '#fbbf24',
+                        success: '#34d399'
+                    },
+                    boxShadow: {
+                        glow: '0 0 25px rgba(82, 214, 255, 0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #020b16, #0b1727 55%, #10263f); 
+            color: #e5eef8; 
+        }
+        .card-glass { 
+            background: rgba(15, 23, 42, 0.85); 
+            border: 1px solid rgba(148, 163, 184, 0.15); 
+            backdrop-filter: blur(8px);
+        }
+        .badge { 
+            font-size: 0.7rem; 
+            letter-spacing: 0.08em; 
+        }
+        
+        /* === FORM INPUT VISIBILITY FIX === */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="url"],
+        input[type="date"],
+        textarea,
+        select {
+            background-color: rgba(30, 41, 59, 0.9) !important; /* Dark slate background */
+            color: #f1f5f9 !important; /* Bright, highly visible text */
+            border: 1px solid rgba(148, 163, 184, 0.3) !important;
+            border-radius: 0.75rem !important;
+            padding: 0.75rem 1rem !important;
+            width: 100% !important;
+            font-size: 1rem !important;
+            outline: none !important;
+            transition: all 0.2s ease !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        input[type="date"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #52d6ff !important; /* Cyan border on focus */
+            box-shadow: 0 0 0 3px rgba(82, 214, 255, 0.15) !important; /* Cyan glow */
+            background-color: rgba(30, 41, 59, 1) !important;
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #64748b !important; /* Subtle placeholder text */
+        }
+        
+        /* Custom dropdown arrow */
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            cursor: pointer;
+        }
+        
+        /* File input styling */
+        input[type="file"] {
+            background-color: transparent !important;
+            border: 1px dashed rgba(148, 163, 184, 0.4) !important;
+            color: #cbd5e1 !important;
+            padding: 1rem !important;
+        }
+        input[type="file"]::file-selector-button {
+            background-color: #52d6ff;
+            color: #0f172a;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+    {% include 'core/partials/navigation.html' %}
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Review Queue{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">Incident management</p>
+      <h1 class="mt-2 text-3xl font-bold text-white">Review queue</h1>
+    </div>
+    <a href="{% url 'management_dashboard' %}" class="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm font-medium text-slate-200 hover:border-cyan-500/60">Back to dashboard</a>
+  </div>
+
+  <div class="card-glass rounded-2xl p-5">
+    <form method="get" class="grid gap-4 md:grid-cols-4">
+      <select name="category" class="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100">
+        <option value="">All categories</option>
+        {% for value, label in incident_categories %}
+        <option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select name="status" class="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100">
+        <option value="">All statuses</option>
+        {% for value, label in incident_statuses %}
+        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select name="severity" class="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-slate-100">
+        <option value="">All severities</option>
+        {% for value, label in incident_severities %}
+        <option value="{{ value }}" {% if filters.severity == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-400">Apply filter</button>
+    </form>
+  </div>
+
+  {% if incidents %}
+  <div class="card-glass overflow-x-auto rounded-2xl">
+    <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+      <thead class="bg-slate-900/70 text-slate-300">
+        <tr>
+          <th class="px-5 py-3 font-medium">Reference</th>
+          <th class="px-5 py-3 font-medium">Title</th>
+          <th class="px-5 py-3 font-medium">Category</th>
+          <th class="px-5 py-3 font-medium">Severity</th>
+          <th class="px-5 py-3 font-medium">Status</th>
+          <th class="px-5 py-3 font-medium">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800">
+        {% for incident in incidents %}
+        <tr>
+          <td class="px-5 py-3 font-medium text-white">{{ incident.reference }}</td>
+          <td class="px-5 py-3">{{ incident.title }}</td>
+          <td class="px-5 py-3">{{ incident.get_category_display }}</td>
+          <td class="px-5 py-3"><span class="rounded-full border border-slate-600 px-2 py-1 text-xs uppercase tracking-[0.1em]">{{ incident.severity }}</span></td>
+          <td class="px-5 py-3"><span class="rounded-full border border-slate-600 px-2 py-1 text-xs uppercase tracking-[0.1em]">{{ incident.get_status_display }}</span></td>
+          <td class="px-5 py-3"><a href="{% url 'incident_detail' incident.pk %}" class="text-cyan-300 hover:text-cyan-200">Review</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-glass rounded-2xl p-8 text-center text-slate-300">No incidents match the selected filters.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% block title %}Register | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+    <div class="card-glass rounded-2xl p-6 shadow-glow">
+        <h1 class="text-2xl font-bold text-cyan-400 text-center mb-6">Create Account</h1>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>{% endif %}
+                {% for error in field.errors %}<p class="text-danger text-xs mt-1">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="w-full rounded-xl bg-cyan-500 py-3 font-bold text-slate-900 hover:bg-cyan-400">Register</button>
+        </form>
+        <p class="text-center text-sm text-slate-400 mt-4">Already have an account? <a href="{% url 'user_login' %}" class="text-cyan-400 hover:underline">Log in</a></p>
+    </div>
+</div>
+{% endblock %}

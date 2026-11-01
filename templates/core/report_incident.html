@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Report Incident{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl">
+  <div class="mb-8">
+    <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">Public reporting</p>
+    <h1 class="mt-2 text-3xl font-bold text-white">Report suspected cybercrime</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="card-glass rounded-2xl p-6 space-y-6">
+    {% csrf_token %}
+    {% if form.errors %}
+    <div class="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+      Please review the form and correct any issues before submitting.
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {% for field in form %}
+      <div class="space-y-2 {% if field.name == 'description' or field.name == 'website_url' or field.name == 'contact_info' %}md:col-span-2{% endif %}">
+        <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-cyan-300">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <div class="text-xs text-slate-400">{{ field.help_text }}</div>
+        {% endif %}
+        {% if field.errors %}
+          <div class="text-xs text-rose-300">{{ field.errors|striptags }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="pt-4 border-t border-slate-700/50">
+      <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-8 py-3.5 text-base font-bold text-slate-950 shadow-glow transition hover:bg-cyan-400 hover:shadow-cyan-500/30">
+        Submit Report
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

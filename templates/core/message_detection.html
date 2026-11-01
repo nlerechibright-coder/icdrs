@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% block title %}Analyse Message | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8 text-center">
+        <h1 class="text-3xl font-bold text-cyan-400">Message Threat Analysis</h1>
+        <p class="mt-2 text-slate-400">Paste any SMS, email, or chat message to check for fraud, phishing, or scams.</p>
+    </div>
+
+    <div class="card-glass rounded-2xl p-6 shadow-glow">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                {{ form.message_text.label_tag }}
+                {{ form.message_text }}
+                {% if form.message_text.help_text %}
+                    <p class="mt-1 text-xs text-slate-500">{{ form.message_text.help_text }}</p>
+                {% endif %}
+            </div>
+            <button type="submit" class="w-full rounded-xl bg-cyan-500 py-3 text-lg font-bold text-slate-900 transition hover:bg-cyan-400 hover:shadow-glow">
+                Analyse Message
+            </button>
+        </form>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <a href="{% url 'detection_lab' %}" class="card-glass rounded-xl p-4 text-center transition hover:border-cyan-500/50">
+            <h3 class="font-semibold text-cyan-400">Network Traffic Analysis</h3>
+            <p class="text-sm text-slate-400">Analyse numeric network patterns instead.</p>
+        </a a>
+        <a href="{% url 'report_incident' %}" class="card-glass rounded-xl p-4 text-center transition hover:border-cyan-500/50">
+            <h3 class="font-semibold text-cyan-400">Manual Incident Report</h3>
+            <p class="text-sm text-slate-400">Report a cybercrime without prior analysis.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

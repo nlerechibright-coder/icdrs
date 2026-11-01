@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% block title %}My Dashboard | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-white">Welcome, {{ request.user.username }}!</h1>
+        <p class="text-slate-400 mt-1">Protect yourself from cybercrime. Analyse messages instantly.</p>
+    </div>
+
+    <a href="{% url 'message_detection' %}" class="block w-full bg-cyan-600 hover:bg-cyan-500 text-white text-center py-6 rounded-xl shadow-glow transition transform hover:scale-[1.01]">
+        <span class="text-xl font-bold">🔍 Analyse a New Message</span>
+        <p class="text-sm opacity-80 mt-1">Paste an SMS, email, or chat to check for fraud</p>
+    </a>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="{% url 'user_history' %}" class="card-glass p-6 rounded-xl text-center hover:border-cyan-500/50 transition">
+            <p class="text-slate-400 text-sm font-medium">Total Analyses</p>
+            <p class="text-4xl font-bold text-white mt-2">{{ event_count }}</p>
+        </a>
+        <a href="{% url 'user_incidents' %}" class="card-glass p-6 rounded-xl text-center hover:border-cyan-500/50 transition">
+            <p class="text-slate-400 text-sm font-medium">Reported Incidents</p>
+            <p class="text-4xl font-bold text-white mt-2">{{ incident_count }}</p>
+        </a>
+    </div>
+
+    <div class="card-glass rounded-xl p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Recent Activity</h2>
+        {% if recent_events %}
+            <div class="space-y-3">
+                {% for event in recent_events %}
+                <div class="flex justify-between items-center p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                    <div>
+                        <span class="font-bold {% if event.predicted_label == 'Fraudulent' %}text-danger{% elif event.predicted_label == 'Suspicious' %}text-warn{% else %}text-success{% endif %}">{{ event.predicted_label }}</span>
+                        <span class="text-xs text-slate-500 ml-2">{{ event.created_at|date:"M d, H:i" }}</span>
+                    </div>
+                    <a href="{% url 'message_result' event.pk %}" class="text-cyan-400 text-sm font-medium hover:underline">View Details</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-slate-400 text-center py-4">No recent activity. <a href="{% url 'message_detection' %}" class="text-cyan-400 hover:underline">Analyse your first message</a>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

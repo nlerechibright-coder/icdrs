@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Incident Detail{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">Incident review</p>
+      <h1 class="mt-2 text-3xl font-bold text-white">{{ incident.reference }} · {{ incident.title }}</h1>
+    </div>
+    <a href="{% url 'review_queue' %}" class="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm font-medium text-slate-200 hover:border-cyan-500/60">Back to queue</a>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <section class="card-glass rounded-2xl p-6">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div class="text-sm text-slate-400">Category</div>
+          <div class="mt-2 text-lg text-white">{{ incident.get_category_display }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div class="text-sm text-slate-400">Severity</div>
+          <div class="mt-2 text-lg text-white">{{ incident.get_severity_display }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div class="text-sm text-slate-400">Status</div>
+          <div class="mt-2 text-lg text-white">{{ incident.get_status_display }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+          <div class="text-sm text-slate-400">Reporter</div>
+          <div class="mt-2 text-lg text-white">{{ incident.reporter_name }}</div>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Incident description</div>
+        <div class="mt-2 whitespace-pre-line text-slate-200">{{ incident.description }}</div>
+      </div>
+
+      {% if incident.website_url %}
+      <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Relevant URL</div>
+        <a href="{{ incident.website_url }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-cyan-300 hover:text-cyan-200">{{ incident.website_url }}</a>
+      </div>
+      {% endif %}
+
+      {% if incident.evidence %}
+      <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Evidence</div>
+        <a href="{% url 'download_incident_evidence' incident.pk %}" class="mt-2 inline-block text-cyan-300 hover:text-cyan-200">Download attached evidence</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="space-y-6">
+      <section class="card-glass rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-white">Update status</h2>
+        <form method="post" class="mt-5 space-y-4">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="space-y-2">
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-200">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="text-xs text-rose-300">{{ field.errors|striptags }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="w-full rounded-xl bg-cyan-500 px-5 py-4 text-base font-semibold text-slate-950 shadow-glow hover:bg-cyan-400">Update Status</button>
+        </form>
+      </section>
+
+      <section class="card-glass rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-white">Export report</h2>
+        <div class="mt-4">
+          <a href="{% url 'export_incident_report' incident.pk %}" class="inline-flex w-full items-center justify-center rounded-xl bg-slate-800 px-5 py-4 text-base font-semibold text-white hover:bg-slate-700">Export Report</a>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Model Status{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-8">
+  <div>
+    <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">Model status</p>
+    <h1 class="mt-2 text-3xl font-bold text-white">Detection engine status</h1>
+  </div>
+
+  <div class="card-glass rounded-2xl p-6">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Active mode</div>
+        <div class="mt-1 text-2xl font-semibold text-white">{{ model_status.mode|title }}</div>
+      </div>
+      <div class="rounded-full border border-slate-600 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-200">
+        {% if model_status.available %}Available{% else %}Simulation{% endif %}
+      </div>
+    </div>
+
+    <div class="mt-6 grid gap-5 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Model file</div>
+        <div class="mt-2 text-white break-all">{{ model_status.model_path }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Feature schema</div>
+        <div class="mt-2 text-white">{{ model_status.feature_names|join:', ' }}</div>
+      </div>
+    </div>
+
+    {% if model_status.metrics %}
+    <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <div class="mb-3 text-lg font-semibold text-white">Evaluation metrics</div>
+      <p class="mb-4 text-sm text-amber-200">These scores are from a held-out split of a small illustrative dataset. They are not estimates of real-world cybercrime detection accuracy.</p>
+      <div class="grid gap-4 md:grid-cols-5">
+        {% for key, value in model_status.metrics.items %}
+        {% if key != 'confusion_matrix' %}
+        <div class="rounded-xl border border-slate-700 bg-slate-800/80 p-3">
+          <div class="text-xs uppercase tracking-[0.18em] text-slate-400">{{ key }}</div>
+          <div class="mt-2 text-lg font-semibold text-white">{{ value|floatformat:4 }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if model_status.error %}
+    <div class="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+      {{ model_status.error }}. The system is currently running in simulation mode.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

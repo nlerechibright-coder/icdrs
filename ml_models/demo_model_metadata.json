@@ -1,0 +1,28 @@
+{
+  "algorithm": "RandomForestClassifier",
+  "feature_names": [
+    "duration_seconds",
+    "bytes_src_to_dst",
+    "bytes_dst_to_src",
+    "failed_connections",
+    "connection_frequency",
+    "service_anomaly_score"
+  ],
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "confusion_matrix": [
+      [
+        3,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ]
+  },
+  "training_rows": 17
+}

@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}My Incidents | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-cyan-400">My Reported Incidents</h1>
+        <a href="{% url 'user_dashboard' %}" class="text-sm text-slate-400 hover:text-cyan-400">← Back to Dashboard</a>
+    </div>
+    <div class="card-glass rounded-xl overflow-hidden">
+        <table class="min-w-full divide-y divide-slate-700 text-left text-sm">
+            <thead class="bg-slate-800/50 text-xs font-semibold uppercase text-slate-400">
+                <tr><th class="px-6 py-3">Reference</th><th class="px-6 py-3">Title</th><th class="px-6 py-3">Status</th><th class="px-6 py-3">Date</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for inc in incidents %}
+                <tr class="hover:bg-slate-800/30">
+                    <td class="px-6 py-4 font-mono text-xs text-cyan-400">{{ inc.reference }}</td>
+                    <td class="px-6 py-4 text-slate-300">{{ inc.title }}</td>
+                    <td class="px-6 py-4 capitalize text-slate-400">{{ inc.status }}</td>
+                    <td class="px-6 py-4 text-slate-400">{{ inc.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No reported incidents yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

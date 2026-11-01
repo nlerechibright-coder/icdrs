@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}ICDRS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { navy: '#071a2d', midnight: '#0d1b2a', cyan: '#52d6ff', slate: '#cbd5e1', danger: '#f87171', warn: '#fbbf24', success: '#34d399' },
+                    boxShadow: { glow: '0 0 25px rgba(82, 214, 255, 0.25)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: linear-gradient(135deg, #020b16, #0b1727 55%, #10263f); color: #e5eef8; }
+        .card-glass { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(148, 163, 184, 0.15); backdrop-filter: blur(8px); }
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+        input[type="text"], input[type="email"], input[type="password"], input[type="url"], textarea, select {
+            background-color: rgba(30, 41, 59, 0.9) !important; color: #f1f5f9 !important;
+            border: 1px solid rgba(148, 163, 184, 0.3) !important; border-radius: 0.5rem !important;
+            padding: 0.75rem 1rem !important; width: 100% !important; font-size: 1rem !important;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #52d6ff !important; outline: none !important; box-shadow: 0 0 0 3px rgba(82, 214, 255, 0.15) !important; }
+    </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col">
+    <!-- Mobile Header -->
+    <header class="lg:hidden bg-midnight/90 border-b border-slate-800 h-16 flex items-center justify-between px-4 sticky top-0 z-50 backdrop-blur-md">
+        <span class="text-xl font-bold text-cyan-400 tracking-wider">ICDRS</span>
+        <button id="mobile-menu-btn" class="p-2 text-slate-300 hover:bg-slate-800 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-midnight border-r border-slate-800 text-slate-300 flex flex-col transform -translate-x-full lg:translate-x-0 lg:static sidebar-transition">
+            <div class="h-16 hidden lg:flex items-center px-6 border-b border-slate-800">
+                <a href="{% url 'landing_page' %}" class="text-xl font-bold text-cyan-400 tracking-wider">ICDRS</a>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'management_dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">📊 Admin Dashboard</a>
+                        <a href="{% url 'kb_message_list' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">🧠 Knowledge Base</a>
+                        <a href="{% url 'review_queue' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">🚨 Incident Queue</a>
+                        <a href="{% url 'detection_lab' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">🌐 Network Lab (Demo)</a>
+                    {% else %}
+                        <a href="{% url 'user_dashboard' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">📊 My Dashboard</a>
+                        <a href="{% url 'message_detection' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">🔍 Analyse Message</a>
+                        <a href="{% url 'user_history' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">📜 My History</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'user_login' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition">Log In</a>
+                    <a href="{% url 'user_register' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 transition mt-2 text-center justify-center">Sign Up</a>
+                    <a href="{% url 'management_login' %}" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-slate-800 hover:text-slate-400 transition mt-4 text-xs border-t border-slate-800 pt-4">🔒 Staff Access</a>
+                {% endif %}
+            </nav>
+
+            {% if user.is_authenticated %}
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-white font-bold text-sm">{{ user.username|first|upper }}</div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium text-white">{{ user.username }}</span>
+                        <span class="text-xs text-slate-500">{% if user.is_staff %}Administrator{% else %}Customer{% endif %}</span>
+                    </div>
+                </div>
+                <form action="{% if user.is_staff %}{% url 'management_logout' %}{% else %}{% url 'user_logout' %}{% endif %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold text-white bg-danger/80 hover:bg-danger rounded-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Log Out
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                        <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-danger/20 text-danger border border-danger/30{% else %}bg-success/20 text-success border border-success/30{% endif %} text-sm">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (btn && sidebar && overlay) {
+            btn.addEventListener('click', () => { sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden'); });
+            overlay.addEventListener('click', () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}ICDRS | Check Suspicious Messages{% endblock %}
+{% block content %}
+<section class="grid gap-10 py-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+  <div>
+    <div class="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-cyan-300">
+      Intelligent Cybercrime Detection
+    </div>
+    <h1 class="max-w-xl text-4xl font-bold tracking-tight text-white sm:text-5xl">Check a Suspicious Message Instantly</h1>
+    <p class="mt-6 max-w-xl text-lg text-slate-300">
+      Paste any SMS, email, or chat message to instantly check for fraud, phishing, or scams. Get a clear risk score and actionable advice in seconds.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-4">
+      {% if user.is_authenticated %}
+        <a href="{% url 'message_detection' %}" class="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-6 py-4 text-base font-semibold text-slate-950 shadow-glow transition hover:bg-cyan-400">Analyse a Message</a>
+      {% else %}
+        <a href="{% url 'user_register' %}" class="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-6 py-4 text-base font-semibold text-slate-950 shadow-glow transition hover:bg-cyan-400">Create Free Account</a>
+      {% endif %}
+      <a href="{% url 'report_incident' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-600 bg-slate-900/70 px-6 py-4 text-base font-semibold text-white transition hover:border-cyan-400/70 hover:text-cyan-200">Report an Incident</a>
+    </div>
+  </div>
+  <div class="card-glass rounded-2xl p-6 shadow-glow">
+    <div class="mb-4 flex items-center justify-between">
+      <span class="badge inline-flex rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-cyan-300">How it works</span>
+    </div>
+    <div class="space-y-4">
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">1</div>
+        <div><div class="font-semibold text-white">Paste the Message</div><div class="text-sm text-slate-400">Copy the suspicious text into our secure analyzer.</div></div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">2</div>
+        <div><div class="font-semibold text-white">Get a Risk Score</div><div class="text-sm text-slate-400">Our engine checks it against known fraud patterns instantly.</div></div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">3</div>
+        <div><div class="font-semibold text-white">Take Action</div><div class="text-sm text-slate-400">Receive clear, plain-English advice on what to do next.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

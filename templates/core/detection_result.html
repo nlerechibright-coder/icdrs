@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Detection Result{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-8">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">Detection result</p>
+      <h1 class="mt-2 text-3xl font-bold text-white">Analysis outcome</h1>
+    </div>
+    <a href="{% url 'detection_lab' %}" class="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm font-medium text-slate-200 hover:border-cyan-500/60">Run another test</a>
+  </div>
+
+  <div class="card-glass rounded-2xl p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <div class="text-sm text-slate-400">Predicted classification</div>
+        <div class="mt-1 text-3xl font-bold text-white">{{ event.predicted_label|title }}</div>
+      </div>
+      <div class="rounded-full px-3 py-2 text-sm font-semibold uppercase tracking-[0.15em] {% if event.severity == 'critical' %}bg-rose-500/15 text-rose-200 border border-rose-500/40{% elif event.severity == 'high' %}bg-amber-500/15 text-amber-200 border border-amber-500/40{% elif event.severity == 'medium' %}bg-yellow-500/15 text-yellow-200 border border-yellow-500/40{% else %}bg-emerald-500/15 text-emerald-200 border border-emerald-500/40{% endif %}">
+        {{ event.severity }} risk
+      </div>
+    </div>
+
+    <div class="mt-8 grid gap-5 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Detection mode</div>
+        <div class="mt-2 text-lg font-medium text-white">{{ event.get_detection_mode_display }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+        <div class="text-sm text-slate-400">Classifier score (not crime probability)</div>
+        <div class="mt-2 text-lg font-medium text-white">{{ event.confidence|floatformat:3 }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 md:col-span-2">
+        <div class="text-sm text-slate-400">Explanation</div>
+        <div class="mt-2 text-slate-200">{{ event.explanation }}</div>
+      </div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4 md:col-span-2">
+        <div class="text-sm text-slate-400">Recommended next step</div>
+        <div class="mt-2 text-slate-200">{{ event.recommendation }}</div>
+      </div>
+    </div>
+
+    {% if incident %}
+    <div class="mt-6 rounded-xl border border-cyan-500/40 bg-cyan-500/10 p-4">
+      <div class="text-sm text-cyan-200">Auto-created incident record</div>
+      <div class="mt-2 flex flex-wrap items-center justify-between gap-4">
+        <div class="text-lg font-semibold text-white">{{ incident.reference }} · {{ incident.title }}</div>
+        <a href="{% url 'incident_detail' incident.pk %}" class="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400">Open incident</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

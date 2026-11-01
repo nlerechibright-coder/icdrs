@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}ICDRS | Detection History{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div>
+    <p class="text-sm uppercase tracking-[0.2em] text-cyan-300">History</p>
+    <h1 class="mt-2 text-3xl font-bold text-white">Previous detections</h1>
+  </div>
+
+  {% if events %}
+  <div class="card-glass overflow-x-auto rounded-2xl">
+    <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+      <thead class="bg-slate-900/70 text-slate-300">
+        <tr>
+          <th class="px-5 py-3 font-medium">Time</th>
+          <th class="px-5 py-3 font-medium">Mode</th>
+          <th class="px-5 py-3 font-medium">Prediction</th>
+          <th class="px-5 py-3 font-medium">Severity</th>
+          <th class="px-5 py-3 font-medium">Source</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800">
+        {% for event in events %}
+        <tr>
+          <td class="px-5 py-3">{{ event.created_at|date:'M d, Y H:i' }}</td>
+          <td class="px-5 py-3">{{ event.get_detection_mode_display }}</td>
+          <td class="px-5 py-3">{{ event.predicted_label|title }}</td>
+          <td class="px-5 py-3">
+            <span class="inline-flex rounded-full border border-slate-600 bg-slate-800 px-2 py-1 text-xs uppercase tracking-[0.1em]">{{ event.severity }}</span>
+          </td>
+          <td class="px-5 py-3">{{ event.get_source_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-glass rounded-2xl p-8 text-center text-slate-300">No detection events have been recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

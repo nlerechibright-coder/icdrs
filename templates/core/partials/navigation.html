@@ -1,0 +1,22 @@
+<nav class="border-b border-slate-700/60 bg-slate-950/80 backdrop-blur-sm">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <a href="{% url 'landing_page' %}" class="flex items-center gap-3 text-lg font-semibold text-white">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300 shadow-glow">IC</span>
+            ICDRS
+        </a>
+        <div class="flex flex-wrap items-center justify-end gap-3 text-sm text-slate-300">
+            <a href="{% url 'landing_page' %}" class="rounded-lg px-3 py-2 hover:bg-slate-800">Home</a>
+            <a href="{% url 'detection_lab' %}" class="rounded-lg px-3 py-2 hover:bg-slate-800">Detection Lab</a>
+            <a href="{% url 'report_incident' %}" class="rounded-lg bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400">Report an Incident</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'management_dashboard' %}" class="rounded-lg px-3 py-2 hover:bg-slate-800">Dashboard</a>
+                <form method="post" action="{% url 'management_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="rounded-lg px-3 py-2 hover:bg-slate-800">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'management_login' %}" class="rounded-lg px-3 py-2 hover:bg-slate-800">Management Login</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+{% block title %}Manage URLs | ICDRS{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-cyan-400">URL Knowledge Base</h1>
+        <a href="{% url 'kb_url_add' %}" class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">+ Add New URL</a>
+    </div>
+    <div class="card-glass rounded-xl overflow-hidden">
+        <table class="min-w-full divide-y divide-slate-700 text-left text-sm">
+            <thead class="bg-slate-800/50 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <tr>
+                    <th class="px-6 py-3">Classification</th>
+                    <th class="px-6 py-3">Domain</th>
+                    <th class="px-6 py-3">Full URL</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for u in urls %}
+                <tr class="hover:bg-slate-800/30">
+                    <td class="px-6 py-4">
+                        <span class="rounded-full px-2 py-1 text-xs font-bold {% if u.classification == 'phishing' %}bg-danger/20 text-danger{% else %}bg-success/20 text-success{% endif %}">
+                            {{ u.classification|upper }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-slate-300">{{ u.domain }}</td>
+                    <td class="px-6 py-4 text-slate-400 truncate max-w-xs">{{ u.url }}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs {% if u.is_active %}text-success{% else %}text-slate-500{% endif %}">
+                            {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <a href="{% url 'kb_url_edit' u.pk %}" class="text-cyan-400 hover:text-cyan-300">Edit</a>
+                        <a href="{% url 'kb_url_toggle' u.pk %}" class="text-slate-400 hover:text-white">{% if u.is_active %}Deactivate{% else %}Activate{% endif %}</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No URLs in the knowledge base yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-4">
+        <a href="{% url 'management_dashboard' %}" class="text-sm text-slate-400 hover:text-cyan-400">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

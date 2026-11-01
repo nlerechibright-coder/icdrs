@@ -1,0 +1,21 @@
+﻿=========================================
+RESERVED DEFENSE DEMONSTRATION MESSAGES
+=========================================
+DO NOT ADD THESE TO THE KNOWLEDGE BASE.
+These are hold-out examples to test the engine's generalization capabilities.
+
+MESSAGE 1 (Phishing + Account Threat):
+"Alert: Unusual login detected from a new device in Lagos. If this wasn't you, secure your account immediately at http://account-security-check.net"
+
+MESSAGE 2 (Advance-fee + Fake Prize):
+"You have won a free iPhone 15 Pro Max! Just pay a small ₦3,000 delivery fee to this account: 1234567890 (GTB) to receive your gift."
+
+MESSAGE 3 (Impersonation + High-Risk URL):
+"Dear valued customer, your BVN has been linked to fraudulent activities. Visit http://cbn-nigeria-verify.org to regularize your account now."
+
+MESSAGE 4 (Genuine Utility Confirmation):
+"Your electricity token of ₦10,000 has been successfully purchased. Meter number: 12345678901. Token: 1122-3344-5566-7788-9900."
+
+MESSAGE 5 (Social Engineering / Urgency):
+"URGENT: Your WhatsApp account will be deleted in 2 hours due to suspicious activity. Click here to verify your identity: http://whatsapp-verify-link.com"
+=========================================
