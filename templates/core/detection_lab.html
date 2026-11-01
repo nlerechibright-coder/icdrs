@@ -80,12 +80,26 @@
         <div class="lg:col-span-2 bg-slate-900/50 rounded-lg p-4 border border-slate-700 relative overflow-hidden min-h-[200px]">
             <h3 class="text-sm font-semibold text-cyan-400 mb-4 uppercase">Network Topology (Simulated)</h3>
             <div class="flex flex-wrap justify-center gap-4 relative z-10">
-                {% for dev in "Workstation 01,Laptop 02,Office Server,Mobile Device,Network Printer".split(',') %}
-                <div id="dev-{{ forloop.counter }}" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                <div id="dev-1" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
                     <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">💻</div>
-                    <span class="text-xs text-slate-300 text-center">{{ dev }}</span>
+                    <span class="text-xs text-slate-300 text-center">Workstation 01</span>
                 </div>
-                {% endfor %}
+                <div id="dev-2" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">💻</div>
+                    <span class="text-xs text-slate-300 text-center">Laptop 02</span>
+                </div>
+                <div id="dev-3" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">🖥️</div>
+                    <span class="text-xs text-slate-300 text-center">Office Server</span>
+                </div>
+                <div id="dev-4" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">📱</div>
+                    <span class="text-xs text-slate-300 text-center">Mobile Device</span>
+                </div>
+                <div id="dev-5" class="flex flex-col items-center p-3 rounded-lg bg-slate-800 border border-slate-700 transition-all duration-300 w-24">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2 device-icon">🖨️</div>
+                    <span class="text-xs text-slate-300 text-center">Network Printer</span>
+                </div>
                 <div class="flex flex-col items-center p-3 rounded-lg bg-cyan-900/30 border border-cyan-500/50 w-24">
                     <div class="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-slate-900 mb-2 animate-pulse">🖥️</div>
                     <span class="text-xs text-cyan-300 text-center font-bold">Monitor</span>
