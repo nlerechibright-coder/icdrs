@@ -483,3 +483,45 @@ def user_history(request):
 def user_incidents(request):
     incidents = Incident.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'core/user_incidents.html', {'incidents': incidents})
+
+
+# --- Network Simulation Endpoints ---
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .simulator import TrafficSimulator, active_simulators
+
+@login_required(login_url="management_login")
+@user_passes_test(lambda u: u.is_staff, login_url="management_login")
+@require_POST
+def simulation_control(request):
+    action = request.POST.get('action')
+    scenario = request.POST.get('scenario', 'normal')
+    user_id = request.user.id
+    
+    sim = active_simulators.get(user_id)
+
+    if action == 'start':
+        if sim and sim.running: sim.stop()
+        sim = TrafficSimulator(scenario, user_id)
+        active_simulators[user_id] = sim
+        sim.start()
+        return JsonResponse({'status': 'started', 'scenario': scenario})
+    elif action == 'stop':
+        if sim: sim.stop()
+        return JsonResponse({'status': 'stopped'})
+    elif action == 'pause':
+        if sim: sim.pause()
+        return JsonResponse({'status': 'paused'})
+    elif action == 'resume':
+        if sim: sim.resume()
+        return JsonResponse({'status': 'resumed'})
+    return JsonResponse({'error': 'Invalid action'}, status=400)
+
+@login_required(login_url="management_login")
+@user_passes_test(lambda u: u.is_staff, login_url="management_login")
+def simulation_status(request):
+    user_id = request.user.id
+    sim = active_simulators.get(user_id)
+    if sim:
+        return JsonResponse(sim.get_status())
+    return JsonResponse({'running': False})

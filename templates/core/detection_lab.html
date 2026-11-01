@@ -63,4 +63,127 @@
     </section>
   </div>
 </div>
+
+<!-- === LIVE NETWORK SIMULATION MODULE === -->
+<div class="card-glass rounded-2xl p-6 shadow-glow mt-8 border-t-4 border-cyan-500">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-cyan-400">🌐 Live Network Simulation</h2>
+        <span id="sim-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400">IDLE</span>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Controls -->
+        <div class="lg:col-span-1 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Select Attack Scenario</label>
+                <select id="sim-scenario" class="w-full rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2 text-slate-100 focus:border-cyan-500 focus:outline-none">
+                    <option value="normal">Normal Network Activity</option>
+                    <option value="port_scan">Port Scanning Simulation</option>
+                    <option value="dos">DoS-like Traffic Flood</option>
+                    <option value="brute_force">Brute-Force Login Attempt</option>
+                    <option value="suspicious">Suspicious Connection Activity</option>
+                </select>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2">
+                <button id="btn-start" class="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success/80 transition">Start</button>
+                <button id="btn-pause" class="rounded-lg bg-warn px-4 py-2 text-sm font-semibold text-white hover:bg-warn/80 transition" disabled>Pause</button>
+                <button id="btn-stop" class="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/80 transition" disabled>Stop</button>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="lg:col-span-2 bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+            <h3 class="text-sm font-semibold text-cyan-400 mb-3 uppercase tracking-wider">Live Extraction & Prediction</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                <div class="bg-slate-800/50 p-3 rounded-lg">
+                    <p class="text-xs text-slate-400">Events Generated</p>
+                    <p id="stat-events" class="text-xl font-bold text-white">0</p>
+                </div>
+                <div class="bg-slate-800/50 p-3 rounded-lg">
+                    <p class="text-xs text-slate-400">Model Prediction</p>
+                    <p id="stat-prediction" class="text-xl font-bold text-slate-500">-</p>
+                </div>
+                <div class="bg-slate-800/50 p-3 rounded-lg">
+                    <p class="text-xs text-slate-400">Anomaly Score</p>
+                    <p id="stat-anomaly" class="text-xl font-bold text-white">0.00</p>
+                </div>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-400 font-mono">
+                <p>Duration: <span id="feat-duration" class="text-slate-200">-</span>s</p>
+                <p>Bytes S->D: <span id="feat-sd" class="text-slate-200">-</span></p>
+                <p>Bytes D->S: <span id="feat-ds" class="text-slate-200">-</span></p>
+                <p>Failed: <span id="feat-failed" class="text-slate-200">-</span></p>
+                <p>Frequency: <span id="feat-freq" class="text-slate-200">-</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pollInterval;
+    const btnStart = document.getElementById('btn-start');
+    const btnPause = document.getElementById('btn-pause');
+    const btnStop = document.getElementById('btn-stop');
+    const scenarioSelect = document.getElementById('sim-scenario');
+    const statusBadge = document.getElementById('sim-status-badge');
+
+    function updateUI(state) {
+        if (state === 'running') {
+            btnStart.disabled = true; btnPause.disabled = false; btnStop.disabled = false;
+            scenarioSelect.disabled = true;
+            statusBadge.innerText = 'RUNNING'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-success/20 text-success';
+        } else if (state === 'paused') {
+            btnStart.disabled = true; btnPause.disabled = true; btnStop.disabled = false;
+            statusBadge.innerText = 'PAUSED'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-warn/20 text-warn';
+        } else {
+            btnStart.disabled = false; btnPause.disabled = true; btnStop.disabled = true;
+            scenarioSelect.disabled = false;
+            statusBadge.innerText = 'IDLE'; statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-400';
+        }
+    }
+
+    function sendControl(action) {
+        const formData = new FormData();
+        formData.append('action', action);
+        if(action === 'start') formData.append('scenario', scenarioSelect.value);
+        
+        fetch("{% url 'simulation_control' %}", { method: 'POST', body: formData, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+        .then(r => r.json()).then(data => {
+            updateUI(data.status === 'started' ? 'running' : (data.status === 'paused' ? 'paused' : 'stopped'));
+            if(data.status === 'started') startPolling();
+            if(data.status === 'stopped') stopPolling();
+        });
+    }
+
+    function startPolling() {
+        pollInterval = setInterval(() => {
+            fetch("{% url 'simulation_status' %}").then(r => r.json()).then(data => {
+                document.getElementById('stat-events').innerText = data.events_count || 0;
+                if (data.prediction) {
+                    const pred = data.prediction.label || 'Unknown';
+                    const predEl = document.getElementById('stat-prediction');
+                    predEl.innerText = pred;
+                    predEl.className = 'text-xl font-bold ' + (pred.toLowerCase() === 'suspicious' ? 'text-danger' : 'text-success');
+                }
+                if (data.features) {
+                    document.getElementById('feat-duration').innerText = data.features.duration_seconds;
+                    document.getElementById('feat-sd').innerText = data.features.bytes_src_to_dst;
+                    document.getElementById('feat-ds').innerText = data.features.bytes_dst_to_src;
+                    document.getElementById('feat-failed').innerText = data.features.failed_connections;
+                    document.getElementById('feat-freq').innerText = data.features.connection_frequency;
+                    document.getElementById('stat-anomaly').innerText = data.features.service_anomaly_score;
+                }
+            });
+        }, 2000);
+    }
+
+    function stopPolling() { clearInterval(pollInterval); }
+
+    btnStart.addEventListener('click', () => sendControl('start'));
+    btnPause.addEventListener('click', () => sendControl('pause'));
+    btnStop.addEventListener('click', () => sendControl('stop'));
+</script>
+
 {% endblock %}

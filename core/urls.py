@@ -36,4 +36,7 @@ urlpatterns = [
     path("user/dashboard/", views.user_dashboard, name="user_dashboard"),
     path("user/history/", views.user_history, name="user_history"),
     path("user/incidents/", views.user_incidents, name="user_incidents"),
+
+    path("management/simulation/control/", views.simulation_control, name="simulation_control"),
+    path("management/simulation/status/", views.simulation_status, name="simulation_status"),
 ]
