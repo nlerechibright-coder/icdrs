@@ -73,7 +73,7 @@ def detection_lab(request):
 
 def detection_result(request, pk):
     event = get_object_or_404(DetectionEvent, pk=pk)
-    # Safely get the incident (handles OneToOneField reverse relation)
+    # Safely get incident (handles OneToOne reverse relation)
     incident = getattr(event, 'incident', None) or getattr(event, 'incidents', None)
     if hasattr(incident, 'first'):
         incident = incident.first()
@@ -237,7 +237,9 @@ def message_detection(request):
 
 def message_result(request, pk):
     event = get_object_or_404(DetectionEvent, pk=pk)
-    incident = event.incidents.first()
+    incident = getattr(event, 'incident', None) or getattr(event, 'incidents', None)
+    if hasattr(incident, 'first'):
+        incident = incident.first()
     return render(request, "core/message_result.html", {"event": event, "incident": incident})
 
 @login_required(login_url="management_login")
