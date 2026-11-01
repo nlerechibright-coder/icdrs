@@ -30,7 +30,7 @@
 
     <section class="card-glass rounded-2xl p-6">
       <h2 class="text-xl font-semibold text-white">Manual feature input</h2>
-      <form method="post" class="mt-5 space-y-5">
+      <form id="detection-form" method="post" class="mt-5 space-y-5">
         {% csrf_token %}
         {% if selected_example %}
         <input type="hidden" name="example_name" value="{{ selected_example }}">
@@ -160,8 +160,8 @@
         </div>
         
         <div class="flex flex-wrap gap-3 justify-center">
-            <button id="btn-analyse" class="bg-cyan-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-cyan-500 hidden">🔍 ANALYSE GENERATED TRAFFIC</button>
-            <button id="btn-use-results" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-500 hidden">⬇️ USE SCAN RESULTS</button>
+            <button id="btn-analyse-scan" class="hidden bg-success text-white px-8 py-3 rounded-lg font-bold hover:bg-success/80 shadow-lg">✅ ANALYSE POPULATED VALUES</button>
+            <button id="btn-cancel-scan" class="hidden bg-danger text-white px-8 py-3 rounded-lg font-bold hover:bg-danger/80 shadow-lg">❌ CANCEL & CLEAR</button>
         </div>
 
         <!-- Prediction Result -->
@@ -245,7 +245,7 @@ function startPolling() {
                 if(feed.children.length > 50) feed.removeChild(feed.lastChild);
             }
 
-            // Update features
+            // Update features and populate form if completed
             if(data.features) {
                 getEl('feat-dur').innerText = data.features.duration_seconds;
                 getEl('feat-sd').innerText = data.features.bytes_src_to_dst;
@@ -253,6 +253,10 @@ function startPolling() {
                 getEl('feat-fail').innerText = data.features.failed_connections;
                 getEl('feat-freq').innerText = data.features.connection_frequency;
                 getEl('feat-anom').innerText = data.features.service_anomaly_score;
+                
+                if(data.state === 'completed') {
+                    populateManualForm(data.features);
+                }
             }
 
             // Update prediction
@@ -267,25 +271,54 @@ function startPolling() {
     }, 1000);
 }
 
-// Use Scan Results -> Populate manual form
-getEl('btn-use-results').addEventListener('click', () => {
-    const f = {
-        'id_duration_seconds': getEl('feat-dur').innerText,
-        'id_bytes_src_to_dst': getEl('feat-sd').innerText,
-        'id_bytes_dst_to_src': getEl('feat-ds').innerText,
-        'id_failed_connections': getEl('feat-fail').innerText,
-        'id_connection_frequency': getEl('feat-freq').innerText,
-        'id_service_anomaly_score': getEl('feat-anom').innerText
+// Populate manual form fields when scan completes
+function populateManualForm(features) {
+    if (!features) return;
+    const fieldMap = {
+        'id_duration_seconds': features.duration_seconds,
+        'id_bytes_src_to_dst': features.bytes_src_to_dst,
+        'id_bytes_dst_to_src': features.bytes_dst_to_src,
+        'id_failed_connections': features.failed_connections,
+        'id_connection_frequency': features.connection_frequency,
+        'id_service_anomaly_score': features.service_anomaly_score
     };
-    Object.entries(f).forEach(([id, val]) => { const el = getEl(id); if(el) el.value = val; });
-    alert('Scan results transferred to manual detection form above!');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    Object.entries(fieldMap).forEach(([id, val]) => { 
+        const el = getEl(id); 
+        if(el) { el.value = val; el.classList.add('bg-cyan-900/30', 'border-cyan-500'); } // Highlight populated fields
+    });
+    // Show action buttons
+    getEl('btn-analyse-scan').classList.remove('hidden');
+    getEl('btn-cancel-scan').classList.remove('hidden');
+    // Scroll to form
+    const formEl = getEl('detection-form');
+    if(formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ANALYSE button: Submit the populated manual form to the existing detection endpoint
+getEl('btn-analyse-scan').addEventListener('click', () => {
+    const form = getEl('detection-form');
+    if (form) {
+        // Remove highlight classes before submission
+        document.querySelectorAll('.bg-cyan-900\\/30').forEach(el => el.classList.remove('bg-cyan-900/30', 'border-cyan-500'));
+        form.submit();
+    } else {
+        alert('Could not find the detection form. Please try manually.');
+    }
 });
 
-getEl('btn-analyse').addEventListener('click', () => {
-    const fd = new FormData(); fd.append('action', 'analyse');
-    fetch("{% url 'simulation_analyse' %}", { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
-    .then(r => r.json()).then(data => { if(data.status === 'ok') updateUI('analysed'); });
+// CANCEL button: Clear fields and reset simulation
+getEl('btn-cancel-scan').addEventListener('click', () => {
+    const fieldIds = ['id_duration_seconds', 'id_bytes_src_to_dst', 'id_bytes_dst_to_src', 'id_failed_connections', 'id_connection_frequency', 'id_service_anomaly_score'];
+    fieldIds.forEach(id => { 
+        const el = getEl(id); 
+        if(el) { el.value = ''; el.classList.remove('bg-cyan-900/30', 'border-cyan-500'); } 
+    });
+    getEl('btn-analyse-scan').classList.add('hidden');
+    getEl('btn-cancel-scan').classList.add('hidden');
+    
+    const fd = new FormData(); fd.append('action', 'reset');
+    fetch("{% url 'simulation_control' %}", { method: 'POST', body: fd, headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+    .then(() => updateUI('idle'));
 });
 
 getEl('btn-start').addEventListener('click', () => sendControl('start'));

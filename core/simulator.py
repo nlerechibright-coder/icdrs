@@ -62,12 +62,16 @@ class SimulationSession:
 
     def _generate_events(self):
         events = []
-        count = random.randint(2, 5)
+        # Vary event count based on scenario for realistic frequency
+        if self.scenario == 'normal': count = random.randint(1, 3)
+        elif self.scenario in ['port_scan', 'brute_force']: count = random.randint(5, 10)
+        elif self.scenario == 'dos': count = random.randint(10, 20)
+        else: count = random.randint(2, 8) # mixed/random
+        
         for _ in range(count):
             src = random.choice(DEVICES)
             dst = 'Monitoring Server' if random.random() > 0.3 else random.choice([d for d in DEVICES if d != src])
             
-            # Base event structure
             event = {
                 'timestamp': datetime.now().strftime('%H:%M:%S'),
                 'src': src, 'dst': dst,
@@ -77,10 +81,10 @@ class SimulationSession:
                 'bytes': 0, 'duration': 0
             }
 
-            # Scenario logic
             if self.scenario == 'normal':
                 event['bytes'] = random.randint(500, 5000)
                 event['duration'] = random.uniform(0.5, 2.0)
+                event['status'] = 'success'
             elif self.scenario == 'port_scan':
                 event['dst_port'] = random.randint(1, 1024)
                 event['status'] = 'failed'
@@ -89,20 +93,22 @@ class SimulationSession:
             elif self.scenario == 'dos':
                 event['bytes'] = random.randint(10000, 50000)
                 event['duration'] = random.uniform(0.01, 0.05)
+                event['status'] = 'success'
             elif self.scenario == 'brute_force':
                 event['dst_port'] = 22
                 event['status'] = 'auth_failed'
                 event['bytes'] = random.randint(200, 500)
                 event['duration'] = random.uniform(0.5, 1.5)
             elif self.scenario in ['mixed', 'random']:
-                choice = random.choice(['normal', 'port_scan', 'dos', 'brute_force'])
-                # Reuse logic by temporarily setting scenario (simplified for brevity)
-                if choice == 'port_scan': event['status'] = 'failed'; event['bytes'] = 60
-                elif choice == 'dos': event['bytes'] = 20000
-                elif choice == 'brute_force': event['status'] = 'auth_failed'; event['dst_port'] = 22
-                else: event['bytes'] = 1500
-                event['duration'] = random.uniform(0.1, 1.0)
-            
+                # Weighted towards normal traffic for realism
+                sub = random.choice(['normal', 'normal', 'normal', 'port_scan', 'brute_force'])
+                if sub == 'normal':
+                    event['bytes'] = random.randint(500, 5000); event['duration'] = random.uniform(0.5, 2.0)
+                elif sub == 'port_scan':
+                    event['dst_port'] = random.randint(1, 1024); event['status'] = 'failed'; event['bytes'] = 60; event['duration'] = 0.05
+                elif sub == 'brute_force':
+                    event['dst_port'] = 22; event['status'] = 'auth_failed'; event['bytes'] = 300; event['duration'] = 1.0
+                    
             events.append(event)
         return events
 
