@@ -441,20 +441,42 @@ def incident_response_dashboard(request):
 @user_passes_test(lambda u: u.is_staff, login_url="management_login")
 @require_POST
 def block_source(request, detection_id):
-    detection = get_object_or_404(DetectionEvent, pk=detection_id)
-    source_device = request.POST.get('source_device', 'Unknown Device')
-    source_ip = request.POST.get('source_ip', None)
-    reason = request.POST.get('reason', '')
-    blocklist, created = NetworkBlocklist.objects.get_or_create(
-        source_device=source_device, is_active=True,
-        defaults={'source_ip': source_ip, 'reason': reason, 'blocked_by': request.user}
-    )
-    if not created:
-        messages.warning(request, f"{source_device} is already blocked.")
-    else:
-        IncidentResponse.objects.create(incident=detection, administrator=request.user, action='BLOCKED', reason=reason, source_device=source_device, source_ip=source_ip)
-        messages.success(request, f"Successfully blocked {source_device}.")
-    return redirect('incident_response_dashboard')
+    try:
+        detection = get_object_or_404(DetectionEvent, pk=detection_id)
+        source_device = request.POST.get('source_device', 'Unknown Device').strip()
+        # Safely handle empty IP strings
+        source_ip_raw = request.POST.get('source_ip', '').strip()
+        source_ip = source_ip_raw if source_ip_raw else None
+        reason = request.POST.get('reason', '').strip()
+        
+        blocklist, created = NetworkBlocklist.objects.get_or_create(
+            source_device=source_device, 
+            is_active=True,
+            defaults={
+                'source_ip': source_ip, 
+                'reason': reason, 
+                'blocked_by': request.user
+            }
+        )
+        
+        if not created:
+            messages.warning(request, f"{source_device} is already blocked.")
+        else:
+            IncidentResponse.objects.create(
+                incident=detection, 
+                administrator=request.user, 
+                action='BLOCKED', 
+                reason=reason, 
+                source_device=source_device, 
+                source_ip=source_ip
+            )
+            messages.success(request, f"Successfully blocked {source_device}.")
+            
+        return redirect('incident_response_dashboard')
+    except Exception as e:
+        logger.error(f"Error blocking source: {str(e)}")
+        messages.error(request, f"An error occurred: {str(e)}")
+        return redirect('incident_response_dashboard')
 
 @login_required(login_url="management_login")
 @user_passes_test(lambda u: u.is_staff, login_url="management_login")
